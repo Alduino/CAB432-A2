@@ -6,9 +6,11 @@ specifiers:
   '@chakra-ui/theme-tools': 1.1.2
   '@emotion/react': 11.1.5
   '@emotion/styled': 11.1.5
+  '@fontsource/inter': ^4.5.0
   '@types/node': ^14.6.0
   '@types/react': ^17.0.3
   '@types/react-dom': ^17.0.3
+  '@types/react-timeago': ^4.1.3
   '@typescript-eslint/eslint-plugin': ^5.1.0
   '@typescript-eslint/parser': ^5.1.0
   eslint: ^8.0.1
@@ -18,10 +20,11 @@ specifiers:
   eslint-plugin-react: ^7.26.1
   eslint-plugin-react-hooks: ^4.2.0
   framer-motion: ^4.0.3
-  next: latest
+  next: ^11.1.2
   prettier: ^2.4.1
   react: ^17.0.2
   react-dom: ^17.0.2
+  react-timeago: ^6.2.1
   typescript: 4.3.2
 
 dependencies:
@@ -30,15 +33,18 @@ dependencies:
   '@chakra-ui/theme-tools': 1.1.2
   '@emotion/react': 11.1.5_0d9ae6029f9b6856f7d6fb45bd27ecc7
   '@emotion/styled': 11.1.5_ba54a001a2f5e07ae771d892b8a1a657
+  '@fontsource/inter': 4.5.0
   framer-motion: 4.1.17_react-dom@17.0.2+react@17.0.2
   next: 11.1.2_c8cdd86752aa86fb2b6e32ae91115ebe
   react: 17.0.2
   react-dom: 17.0.2_react@17.0.2
+  react-timeago: 6.2.1_react@17.0.2
 
 devDependencies:
   '@types/node': 14.17.27
   '@types/react': 17.0.30
   '@types/react-dom': 17.0.9
+  '@types/react-timeago': 4.1.3
   '@typescript-eslint/eslint-plugin': 5.1.0_b79c5955669dd947aeeea951bcb2ff45
   '@typescript-eslint/parser': 5.1.0_eslint@8.0.1+typescript@4.3.2
   eslint: 8.0.1
@@ -1106,6 +1112,10 @@ packages:
       - supports-color
     dev: true
 
+  /@fontsource/inter/4.5.0:
+    resolution: {integrity: sha512-2efK8Ru0LkuOYrEpiHPlV02YkTdIKGbezlxVNeA8/3c+tNt7P2aQPuiYYkVy7N4GA5LWSUVcLL/91MpCIjinOw==}
+    dev: false
+
   /@hapi/accept/5.0.2:
     resolution: {integrity: sha512-CmzBx/bXUR8451fnZRuZAJRlzgm0Jgu5dltTX/bszmR2lheb9BpyN47Q1RbaGTsvFzn0PXAEs+lXDKfshccYZw==}
     dependencies:
@@ -1329,6 +1339,12 @@ packages:
 
   /@types/react-dom/17.0.9:
     resolution: {integrity: sha512-wIvGxLfgpVDSAMH5utdL9Ngm5Owu0VsGmldro3ORLXV8CShrL8awVj06NuEXFQ5xyaYfdca7Sgbk/50Ri1GdPg==}
+    dependencies:
+      '@types/react': 17.0.30
+    dev: true
+
+  /@types/react-timeago/4.1.3:
+    resolution: {integrity: sha512-XaaMBzuXLw7lxPPDs/fenlohcf3NDqM5qP4oOL/Meu+Hb1QChW4Igw/SruS1llEqch18RQB3wDTIwvqq4nivvw==}
     dependencies:
       '@types/react': 17.0.30
     dev: true
@@ -3858,6 +3874,14 @@ packages:
       invariant: 2.2.4
       react: 17.0.2
       tslib: 1.14.1
+    dev: false
+
+  /react-timeago/6.2.1_react@17.0.2:
+    resolution: {integrity: sha512-b9EObWO8wy4qwfOzj+g/RQZRrPvtMv1Pz12FCdAWKWCXbDGt0rZLyiyTGEr0Lh1O8w5xa48CtRpl3LI+CtGCyw==}
+    peerDependencies:
+      react: ^16.0.0 || ^17.0.0
+    dependencies:
+      react: 17.0.2
     dev: false
 
   /react/17.0.2:

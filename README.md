@@ -1,4 +1,4 @@
-![Artiller logo](./logo-150.png)
+![Artiller logo](./logo-small.png)
 
 # Artiller
 
