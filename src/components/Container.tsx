@@ -1,18 +1,26 @@
-import {Flex, Stack} from "@chakra-ui/react";
+import {Flex, Stack, useColorModeValue} from "@chakra-ui/react";
 import Head from "next/head";
 import {ReactNode} from "react";
 import {NavBar} from "./NavBar";
 
-export function Container({children}: {children: ReactNode}) {
+export interface ContainerProps {
+    title: string;
+    children: ReactNode;
+}
+
+export function Container({title, children}: ContainerProps) {
+    const faviconPath = useColorModeValue(
+        "/assets/logo-black.svg",
+        "/assets/logo-white.svg"
+    );
+
     return (
         <Flex minHeight="100vh" justifyContent="center" p={12}>
             <Head>
-                <title>Did Apple just ruin an almost perfect new MacBook Pro design?</title>
+                <title>{title}</title>
+                <link rel="icon" href={faviconPath} />
             </Head>
-            <Stack maxWidth="1320px" width="full" direction="column">
-                <NavBar />
-                {children}
-            </Stack>
+            {children}
         </Flex>
     );
 }

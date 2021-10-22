@@ -1,62 +1,67 @@
+import {SearchIcon} from "@chakra-ui/icons";
 import {
     Box,
-    Button,
+    Center,
     Heading,
     HStack,
-    Link,
-    Stack,
-    StackDivider,
+    IconButton,
+    Input,
+    InputGroup,
+    InputRightElement,
     Tag,
-    Text,
-    useColorModeValue
+    TagCloseButton,
+    TagLabel,
+    useMultiStyleConfig,
+    VStack
 } from "@chakra-ui/react";
-import Head from "next/head";
-import {ByLine} from "../components/ByLine";
+import {ReactElement} from "react";
 import {Container} from "../components/Container";
+import {Logo} from "../components/Logo";
 
-export default function Index() {
-    const faviconPath = useColorModeValue(
-        "/assets/logo-black.svg",
-        "/assets/logo-white.svg"
-    );
+export default function Index(): ReactElement {
+    const inputContainerStyles = useMultiStyleConfig("Input", {});
 
     return (
-        <Container>
-            <Head>
-                <link rel="icon" href={faviconPath} />
-            </Head>
-
-            <Stack height="full" direction="row" divider={<StackDivider />}>
-                <Stack flexGrow={1} p={8} spacing={4}>
-                    <Heading size="md">
-                        Did Apple just ruin an almost perfect new MacBook Pro
-                        design?
-                    </Heading>
-                    <ByLine author="Michael Myers" published={new Date()} />
-                    <HStack>
-                        <Tag>apple</Tag>
-                        <Tag>macbook</Tag>
-                        <Tag>macbook-pro</Tag>
+        <Container title="Artiller">
+            <Center flexDir="column">
+                <VStack spacing={6}>
+                    <Logo size={16} />
+                    <Heading size="md">Artiller</Heading>
+                    <HStack
+                        sx={{
+                            ...inputContainerStyles.field,
+                            pl: 2,
+                            pr: 0,
+                            w: "lg"
+                        }}
+                    >
+                        <HStack>
+                            <Tag>
+                                <TagLabel>apple</TagLabel>
+                                <TagCloseButton />
+                            </Tag>
+                        </HStack>
+                        <InputGroup overflow="hidden">
+                            <Input
+                                flexGrow={1}
+                                variant="unstyled"
+                                py={2}
+                                type="search"
+                                defaultValue="macbook 2021"
+                                placeholder="Search or paste a URL"
+                            />
+                            <InputRightElement
+                                as={IconButton}
+                                aria-label="Search"
+                                variant="ghost"
+                                color="gray.500"
+                                icon={<SearchIcon />}
+                            />
+                        </InputGroup>
                     </HStack>
-                    <Box />
-                    <HStack>
-                        <Button variant="outline" colorScheme="gray">
-                            Find similar articles
-                        </Button>
-                    </HStack>
-                    <Box flexGrow={1} />
-                    <HStack spacing={1} fontSize="sm" opacity={.8}>
-                        <Text opacity={.8}>
-                            Something broken? Read this article on
-                        </Text>
-                        <Link href="#">a-news-website.com</Link>
-                    </HStack>
-                </Stack>
-                <Stack w="62%" p={12} spacing={4}>
-                    <Text>Lorem ipsum dolor sit amet, ...</Text>
-                    <Text>I&rsquo;m not copying all that text into code.</Text>
-                </Stack>
-            </Stack>
+                </VStack>
+                <Box h="30vh" />
+            </Center>
         </Container>
     );
 }
