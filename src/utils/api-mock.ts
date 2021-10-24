@@ -1,11 +1,12 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import Article from "../api-types/Article";
-import SearchRequest, {SearchRequestTag} from "../api-types/SearchRequest";
+import SearchRequest from "../api-types/SearchRequest";
 import {
     SearchResponse,
     SearchResponseItem,
     SearchResponseTag
 } from "../api-types/SearchResponse";
+import {SearchTag} from "../api-types/SearchTag";
 import cut from "./cut";
 
 const articles: Article[] = [
@@ -61,12 +62,12 @@ interface SearchMatch_Single {
 
 type SearchMatch = SearchMatch_Range | SearchMatch_Indexed | SearchMatch_Single;
 
-function parseTag(tag: string): SearchRequestTag {
+function parseTag(tag: string): SearchTag {
     const splitPoint = tag.indexOf("_");
     const kind =
         splitPoint === -1
             ? "normal"
-            : (tag.substring(0, splitPoint) as SearchRequestTag["kind"]);
+            : (tag.substring(0, splitPoint) as SearchTag["kind"]);
     const value = splitPoint === -1 ? tag : tag.substring(splitPoint + 1);
 
     return {
