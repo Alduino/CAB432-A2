@@ -23,7 +23,7 @@ export default function SearchMockup() {
         <Container title="macbook 2021 - Artiller">
             <MainStack>
                 <Stack p={8} direction="column" spacing={6} divider={<StackDivider />}>
-                    <SearchBox w="full" />
+                    <SearchBox w="full" term="apple ruined the macbook" />
                     <Stack spacing={4}>
                         <SearchResult />
                         <SearchResult />

@@ -1,6 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@alduino/api-utils': ^0.4.0
   '@chakra-ui/icons': ^1.0.16
   '@chakra-ui/react': ^1.4.2
   '@chakra-ui/theme-tools': 1.1.2
@@ -26,8 +27,10 @@ specifiers:
   react-dom: ^17.0.2
   react-timeago: ^6.2.1
   typescript: 4.3.2
+  use-constant: ^1.1.0
 
 dependencies:
+  '@alduino/api-utils': 0.4.0_react@17.0.2
   '@chakra-ui/icons': 1.0.16_react@17.0.2
   '@chakra-ui/react': 1.6.10_00d6426ed8a50f01bcdd062a1ae3ad13
   '@chakra-ui/theme-tools': 1.1.2
@@ -39,6 +42,7 @@ dependencies:
   react: 17.0.2
   react-dom: 17.0.2_react@17.0.2
   react-timeago: 6.2.1_react@17.0.2
+  use-constant: 1.1.0_react@17.0.2
 
 devDependencies:
   '@types/node': 14.17.27
@@ -57,6 +61,18 @@ devDependencies:
   typescript: 4.3.2
 
 packages:
+
+  /@alduino/api-utils/0.4.0_react@17.0.2:
+    resolution: {integrity: sha512-kKy5BJeLfmWsHVx/Le/eyLE7QiF9AaJgM435Ur4N1rHHAVkvgYELzr1X2aQbsIzW7sQrW6F3z52ca2Dkf3lhXQ==}
+    peerDependencies:
+      react: ^16 || ^17
+    dependencies:
+      react: 17.0.2
+      react-async-hook: 3.6.2_react@17.0.2
+      swr: 1.0.1_react@17.0.2
+      tiny-invariant: 1.1.0
+      tslib: 2.3.1
+    dev: false
 
   /@babel/code-frame/7.12.11:
     resolution: {integrity: sha512-Zt1yodBx1UcyiePMSkWnU4hPqhwq7hGi2nFL1LeA3EUl+q2LQx16MISgJ0+z7dnmgvP9QtIleuETGOiOH1RcIw==}
@@ -2124,6 +2140,11 @@ packages:
     engines: {node: '>= 0.6'}
     dev: false
 
+  /dequal/2.0.2:
+    resolution: {integrity: sha512-q9K8BlJVxK7hQYqa6XISGmBZbtQQWVXSrRrWreHC94rMt1QL/Impruc+7p2CYSYuVIUr+YCt6hjrs1kkdJRTug==}
+    engines: {node: '>=6'}
+    dev: false
+
   /des.js/1.0.1:
     resolution: {integrity: sha512-Q0I4pfFrv2VPd34/vfLrFOoRmlYj3OV50i7fskps1jZWK1kApMWWT9G6RRUeYedLcBDIhnSDaUvJMb3AhUlaEA==}
     dependencies:
@@ -3772,6 +3793,15 @@ packages:
       unpipe: 1.0.0
     dev: false
 
+  /react-async-hook/3.6.2_react@17.0.2:
+    resolution: {integrity: sha512-RkwHCJ8V7I6umKZLHneapuTRWf+eO4LOj0qUwUDsSn27jrAOcW6ClbV3x22Z4hVxH9bA0zb7y+ozDJDJ8PnZoA==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      react: '>=16.8'
+    dependencies:
+      react: 17.0.2
+    dev: false
+
   /react-clientside-effect/1.2.5_react@17.0.2:
     resolution: {integrity: sha512-2bL8qFW1TGBHozGGbVeyvnggRpMjibeZM2536AKNENLECutp2yfs44IL8Hmpn8qjFQ2K7A9PnYf3vc7aQq/cPA==}
     peerDependencies:
@@ -4259,6 +4289,15 @@ packages:
       has-flag: 4.0.0
     dev: false
 
+  /swr/1.0.1_react@17.0.2:
+    resolution: {integrity: sha512-EPQAxSjoD4IaM49rpRHK0q+/NzcwoT8c0/Ylu/u3/6mFj/CWnQVjNJ0MV2Iuw/U+EJSd2TX5czdAwKPYZIG0YA==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0
+    dependencies:
+      dequal: 2.0.2
+      react: 17.0.2
+    dev: false
+
   /text-table/0.2.0:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
     dev: true
@@ -4414,6 +4453,14 @@ packages:
         optional: true
     dependencies:
       '@types/react': 17.0.30
+      react: 17.0.2
+    dev: false
+
+  /use-constant/1.1.0_react@17.0.2:
+    resolution: {integrity: sha512-yrflEfv7Xv/W8WlYV6nwRH01K+2BpR4cWxuzY03yPRjYZuHixhGlvnJN5O2bRYrXGpJ4zy8QjFABGIQ2QXeBOA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+    dependencies:
       react: 17.0.2
     dev: false
 
