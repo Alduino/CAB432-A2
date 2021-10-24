@@ -134,13 +134,13 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
                     break;
                 }
                 case "author":
-                    if (article.author !== tag.value) break;
+                    if (article.author.toLowerCase() !== tag.value.toLowerCase()) break;
                     matched = true;
                     matchArray.push({kind: "author"});
                     break;
                 case "www": {
                     const articleHost = new URL(article.link).host;
-                    if (articleHost !== tag.value) break;
+                    if (articleHost !== tag.value.toLowerCase()) break;
                     matched = true;
                     matchArray.push({kind: "www"});
                     break;
