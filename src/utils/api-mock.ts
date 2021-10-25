@@ -7,7 +7,7 @@ import {
     SearchResponseTag
 } from "../api-types/SearchResponse";
 import {SearchTag} from "../api-types/SearchTag";
-import cut from "./cut";
+import cut, {mergeCutRanges} from "./cut";
 
 const articles: Article[] = [
     {
@@ -134,7 +134,10 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
                     break;
                 }
                 case "author":
-                    if (article.author.toLowerCase() !== tag.value.toLowerCase()) break;
+                    if (
+                        article.author.toLowerCase() !== tag.value.toLowerCase()
+                    )
+                        break;
                     matched = true;
                     matchArray.push({kind: "author"});
                     break;
@@ -160,11 +163,13 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
         .map(([idx, matches]) => {
             const article = articles[idx];
 
-            const titleCutPoints = (
-                matches.filter(
-                    match => match.kind === "title"
-                ) as SearchMatch_Range[]
-            ).flatMap(match => [match.from, match.to]);
+            const titleCutPoints = mergeCutRanges(
+                (
+                    matches.filter(
+                        match => match.kind === "title"
+                    ) as SearchMatch_Range[]
+                ).map(match => [match.from, match.to])
+            ).flat();
 
             const tagMatches = new Set(
                 (
