@@ -1,12 +1,13 @@
 import {SearchIcon} from "@chakra-ui/icons";
 import {
-    Box,
+    Button,
     chakra,
     HStack,
     IconButton,
     Input,
     InputGroup,
     InputRightElement,
+    Stack,
     StackProps,
     Tag,
     TagCloseButton,
@@ -19,7 +20,8 @@ import {
     KeyboardEventHandler,
     useCallback,
     useMemo,
-    useReducer, useRef,
+    useReducer,
+    useRef,
     useState
 } from "react";
 import {SearchTag} from "../api-types/SearchTag";
@@ -51,10 +53,9 @@ type SearchTagsActions = MapActionObjectToActions<{
     pop: void;
 }>;
 
-export function useSearchTags(initialState: SearchTag[] = []): [
-    tags: SearchTag[],
-    dispatch: Dispatch<SearchTagsActions>
-] {
+export function useSearchTags(
+    initialState: SearchTag[] = []
+): [tags: SearchTag[], dispatch: Dispatch<SearchTagsActions>] {
     return useReducer((state: SearchTag[], action: SearchTagsActions) => {
         switch (action.type) {
             case "pop":
@@ -92,8 +93,7 @@ export function SearchBox({
         SearchTag["kind"] | null
     >(null);
 
-    const autocompleteBackground = useColorModeValue("gray.200", "gray.700");
-    const autocompleteHighlightedBg = useColorModeValue("whiteAlpha.500", "whiteAlpha.300");
+    const autocompleteBackground = useColorModeValue("gray.50", "gray.700");
 
     const [editTagValue, setEditTagValue] = useState("");
     const {width: editTagWidth, ref: editTagRef} = useTextWidth(editTagValue);
@@ -103,27 +103,39 @@ export function SearchBox({
         if (!termTrimmed) return [];
 
         const possible: SearchTag["kind"][] = ["author", "www"];
-        return possible.filter(kind => kind.indexOf(termTrimmed) === 0);
+        return termTrimmed === ":"
+            ? possible
+            : possible.filter(kind => kind.indexOf(termTrimmed) === 0);
     }, [term]);
 
     const {
         currentIndex: currentAutocompleteIndex,
+        setCurrentIndex: setCurrentAutocompleteIndex,
         onKeyDown: onAutocompleteKeydown
     } = useListControls(autocompleteItems.length);
+
+    const beginEditingTag = useCallback(
+        (idx: number) => {
+            setEditingTagKind(autocompleteItems[idx]);
+            onTermChanged("");
+        },
+        [setEditingTagKind, autocompleteItems]
+    );
 
     const handleKeydown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
         ev => {
             const termTrimmed = term.trim();
 
             if (ev.key === "Backspace" && term.length === 0) {
+                // Delete the last tag (similar to backspace with normal text)
                 tagsDispatch({type: "pop"});
                 ev.preventDefault();
             } else if (
                 (ev.key === ":" || ev.key === "Enter") &&
                 autocompleteItems.length > 0
             ) {
-                setEditingTagKind(autocompleteItems[currentAutocompleteIndex]);
-                onTermChanged("");
+                // Begin editing a tag
+                beginEditingTag(currentAutocompleteIndex);
                 ev.preventDefault();
             } else if (
                 termTrimmed.length > 0 &&
@@ -133,6 +145,7 @@ export function SearchBox({
                 (ev.key === "," || ev.key === "Enter") &&
                 !termTrimmed.includes(" ")
             ) {
+                // Add a normal tag
                 tagsDispatch({
                     type: "add",
                     tag: {kind: "normal", value: termTrimmed}
@@ -149,6 +162,7 @@ export function SearchBox({
             tags,
             tagsDispatch,
             setEditingTagKind,
+            beginEditingTag,
             currentAutocompleteIndex,
             onAutocompleteKeydown
         ]
@@ -157,15 +171,22 @@ export function SearchBox({
     const cancelTagEdit = useCallback(() => {
         setEditingTagKind(null);
         setEditTagValue("");
+        setCurrentAutocompleteIndex(0);
 
         if (mainInput.current) {
             mainInput.current.focus();
         }
-    }, [setEditingTagKind, setEditTagValue, mainInput]);
+    }, [
+        setEditingTagKind,
+        setEditTagValue,
+        setCurrentAutocompleteIndex,
+        mainInput
+    ]);
 
     const commitTagEdit = useCallback(() => {
         tagsDispatch({
-            type: "add", tag: {
+            type: "add",
+            tag: {
                 kind: editingTagKind,
                 value: editTagValue
             }
@@ -174,17 +195,25 @@ export function SearchBox({
         cancelTagEdit();
     }, [tagsDispatch, editingTagKind, editTagValue, cancelTagEdit]);
 
-    const handleTagEditKeydown = useCallback<KeyboardEventHandler<HTMLInputElement>>(ev => {
-        const valueTrimmed = editTagValue.trim();
+    const handleTagEditKeydown = useCallback<
+        KeyboardEventHandler<HTMLInputElement>
+    >(
+        ev => {
+            const valueTrimmed = editTagValue.trim();
 
-        if ((ev.key === "Enter" || ev.key === "Tab") && valueTrimmed) {
-            commitTagEdit();
-            ev.preventDefault();
-        } else if (ev.key === "Escape" || (ev.key === "Backspace" && !valueTrimmed)) {
-            cancelTagEdit();
-            ev.preventDefault();
-        }
-    }, [editTagValue, commitTagEdit, cancelTagEdit]);
+            if ((ev.key === "Enter" || ev.key === "Tab") && valueTrimmed) {
+                commitTagEdit();
+                ev.preventDefault();
+            } else if (
+                ev.key === "Escape" ||
+                (ev.key === "Backspace" && !valueTrimmed)
+            ) {
+                cancelTagEdit();
+                ev.preventDefault();
+            }
+        },
+        [editTagValue, commitTagEdit, cancelTagEdit]
+    );
 
     return (
         <HStack
@@ -232,30 +261,31 @@ export function SearchBox({
             </HStack>
             <InputGroup position="relative">
                 {autocompleteItems.length && (
-                    <Box
+                    <Stack
                         position="absolute"
                         zIndex={1}
                         top={8}
                         bg={autocompleteBackground}
                         shadow="md"
+                        spacing={0}
                         py={2}
                         rounded="md"
                         overflow="hidden"
                         userSelect="none"
                     >
                         {autocompleteItems.map((item, i) => (
-                            <Box
+                            <Button
                                 key={item}
-                                bg={
-                                    i === currentAutocompleteIndex &&
-                                    autocompleteHighlightedBg
-                                }
+                                variant="ghost"
                                 p={2}
+                                rounded={0}
+                                isActive={i === currentAutocompleteIndex}
+                                onClick={() => beginEditingTag(i)}
                             >
                                 {item}:
-                            </Box>
+                            </Button>
                         ))}
-                    </Box>
+                    </Stack>
                 )}
                 <Input
                     ref={mainInput}
@@ -264,7 +294,9 @@ export function SearchBox({
                     pl={2}
                     py={2}
                     type="search"
-                    placeholder={tags.length ? "Search" : "Search or paste a URL"}
+                    placeholder={
+                        tags.length ? "Search" : "Search or paste a URL"
+                    }
                     value={term}
                     onKeyDown={handleKeydown}
                     onChange={ev => onTermChanged?.(ev.target.value)}

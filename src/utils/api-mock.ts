@@ -1,4 +1,5 @@
 import {NextApiRequest, NextApiResponse} from "next";
+import ApiError, {isApiError} from "../api-types/ApiError";
 import Article from "../api-types/Article";
 import SearchRequest from "../api-types/SearchRequest";
 import {
@@ -6,12 +7,12 @@ import {
     SearchResponseItem,
     SearchResponseTag
 } from "../api-types/SearchResponse";
-import {SearchTag} from "../api-types/SearchTag";
 import cut, {mergeCutRanges} from "./cut";
 import {parseTag} from "./parseTag";
 
 const articles: Article[] = [
     {
+        id: "0",
         title: "Did Apple just ruin an almost perfect new MacBook design?",
         link: "https://appletips.com/did-apple-just-ruin",
         tags: ["apple", "macbook", "macbook-pro"],
@@ -23,6 +24,7 @@ const articles: Article[] = [
         ]
     },
     {
+        id: "1",
         title: "'Chris-tastic' news as Hemsworth sends his love to Cowra and accepts invitation",
         link: "https://the-hemsworths.com/christastic-cowra-invitation",
         tags: ["hemsworth", "cowra", "invitation"],
@@ -34,6 +36,7 @@ const articles: Article[] = [
         ]
     },
     {
+        id: "2",
         title: "iPhone 13 upgrades suck - why you should wait for the iPhone 14",
         link: "https://appletips.com/wait-for-the-iphone-14",
         tags: ["apple", "iphone", "iphone13", "iphone14"],
@@ -172,6 +175,7 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
             }));
 
             return {
+                id: article.id,
                 title: cut(article.title, titleCutPoints),
                 link: article.link,
                 wasLinkMatch: matches.some(it => it.kind === "www"),
@@ -185,4 +189,42 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
     res.json({
         results: matchedArticles
     } as SearchResponse);
+}
+
+export function getArticleResult(
+    query: Record<string, string | string[]>
+): Article | ApiError {
+    if (!query.id) {
+        return {
+            error: "MISSING_PARAM",
+            param: "query.id"
+        };
+    }
+
+    const id = parseInt(query.id as string);
+
+    if (Number.isNaN(id)) {
+        return {
+            error: "INVALID_PARAM",
+            param: "query.id"
+        };
+    }
+
+    if (id < 0 || id >= articles.length) {
+        return {
+            error: "NOT_FOUND"
+        };
+    }
+
+    return articles[id];
+}
+
+export function mockArticle(req: NextApiRequest, res: NextApiResponse) {
+    const result = getArticleResult(req.query);
+
+    if (isApiError(result)) {
+        res.status(result.error === "NOT_FOUND" ? 404 : 400);
+    }
+
+    res.json(result);
 }

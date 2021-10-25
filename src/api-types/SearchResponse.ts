@@ -12,6 +12,11 @@ export interface SearchResponseTag {
 
 export interface SearchResponseItem {
     /**
+     * A unique reference to this article
+     */
+    id: string;
+
+    /**
      * The title of the article, but split out so that even elements are matches
      * from the search (and will be highlighted on the client), e.g.
      *

@@ -1,5 +1,10 @@
 export default interface Article {
     /**
+     * A unique reference to this article
+     */
+    id: string;
+
+    /**
      * The title text of the article, without any formatting
      */
     title: string;

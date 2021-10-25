@@ -1,4 +1,5 @@
 import {chakra, HStack, Link, StackDivider, Text} from "@chakra-ui/react";
+import NextLink from "next/link";
 import {ReactElement, useMemo} from "react";
 import TimeAgo from "react-timeago";
 
@@ -8,6 +9,7 @@ export interface ByLineProps {
     published: Date;
     link?: string;
     wasLinkMatch?: boolean;
+    linkToSearch?: boolean;
 }
 
 export function ByLine({
@@ -15,15 +17,20 @@ export function ByLine({
     wasAuthorMatch,
     published,
     link,
-    wasLinkMatch
+    wasLinkMatch,
+    linkToSearch
 }: ByLineProps): ReactElement {
     const linkHost = useMemo(() => link && new URL(link).hostname, [link]);
+
+    const authorText = wasAuthorMatch ? <strong>{author}</strong> : author;
 
     return (
         <HStack divider={<StackDivider />}>
             <Text>
                 <chakra.span opacity={0.6}>by </chakra.span>
-                {wasAuthorMatch ? <strong>{author}</strong> : author}
+                {linkToSearch ? (
+                    <NextLink href={`/search?tags=author_${author}`} as="/search" passHref><Link>{authorText}</Link></NextLink>
+                ) : authorText}
                 {link && (
                     <>
                         <chakra.span opacity={0.6}> on </chakra.span>

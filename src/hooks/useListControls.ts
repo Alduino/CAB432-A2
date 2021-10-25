@@ -4,6 +4,7 @@ import useWrappingState from "./useWrappingState";
 export interface UseListControlsResult {
     currentIndex: number;
     onKeyDown: KeyboardEventHandler;
+    setCurrentIndex(idx: number): void;
 }
 
 export default function useListControls(
@@ -26,6 +27,7 @@ export default function useListControls(
 
     return {
         currentIndex: index,
+        setCurrentIndex: setIndex,
         onKeyDown: handleKeyDown
     };
 }
