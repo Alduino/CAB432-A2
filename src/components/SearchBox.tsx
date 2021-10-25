@@ -88,10 +88,12 @@ export function SearchBox({
 }: SearchBoxProps) {
     const mainInput = useRef<HTMLInputElement>();
     const inputContainerStyles = useMultiStyleConfig("Input", {});
-    const autocompleteBackground = useColorModeValue("gray.300", "gray.700");
     const [editingTagKind, setEditingTagKind] = useState<
         SearchTag["kind"] | null
     >(null);
+
+    const autocompleteBackground = useColorModeValue("gray.200", "gray.700");
+    const autocompleteHighlightedBg = useColorModeValue("whiteAlpha.500", "whiteAlpha.300");
 
     const [editTagValue, setEditTagValue] = useState("");
     const {width: editTagWidth, ref: editTagRef} = useTextWidth(editTagValue);
@@ -246,7 +248,7 @@ export function SearchBox({
                                 key={item}
                                 bg={
                                     i === currentAutocompleteIndex &&
-                                    "whiteAlpha.300"
+                                    autocompleteHighlightedBg
                                 }
                                 p={2}
                             >
