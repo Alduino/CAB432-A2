@@ -2,15 +2,19 @@ import {useFetch} from "@alduino/api-utils";
 import {
     Heading,
     HStack,
+    Link,
     Spinner,
     Stack,
     StackDivider,
     Tag,
     Text
 } from "@chakra-ui/react";
+import NextLink from "next/link";
+import {useRouter} from "next/router";
 import {useEffect, useMemo, useState} from "react";
 import SearchRequest from "../api-types/SearchRequest";
 import {SearchResponseItem} from "../api-types/SearchResponse";
+import {SearchTag} from "../api-types/SearchTag";
 import {ByLine} from "../components/ByLine";
 import {Container} from "../components/Container";
 import {MainStack} from "../components/MainStack";
@@ -27,9 +31,13 @@ function SearchResult({result}: SearchResultProps) {
     return (
         <Stack p={4}>
             <Heading fontWeight="400" size="md">
-                {result.title.map((part, i) =>
-                    i % 2 ? <strong key={i}>{part}</strong> : part
-                )}
+                <NextLink href={`/article/${result.id}`} passHref>
+                    <Link>
+                        {result.title.map((part, i) =>
+                            i % 2 ? <strong key={i}>{part}</strong> : part
+                        )}
+                    </Link>
+                </NextLink>
             </Heading>
             <ByLine
                 author={result.author}
@@ -53,10 +61,23 @@ function SearchResult({result}: SearchResultProps) {
     );
 }
 
-export default function SearchMockup() {
+export default function Search() {
+    const {query} = useRouter();
+
+    const initialTags: SearchTag[] = useMemo(() => {
+        return (
+            (Array.isArray(query.tags) ? query.tags.join(",") : query.tags)
+                ?.split(",")
+                .map(tag => ({
+                    kind: "normal",
+                    value: tag
+                })) ?? []
+        );
+    }, [query.tags]);
+
     const [textboxValue, setTextboxValue] = useState("");
     const [searchTerm, setSearchTerm] = useDebouncedState(textboxValue, 200);
-    const [searchTags, searchTagsDispatch] = useSearchTags();
+    const [searchTags, searchTagsDispatch] = useSearchTags(initialTags);
 
     const searchRequest = useMemo<SearchRequest>(
         () => ({

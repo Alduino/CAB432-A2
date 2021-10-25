@@ -51,7 +51,7 @@ type SearchTagsActions = MapActionObjectToActions<{
     pop: void;
 }>;
 
-export function useSearchTags(): [
+export function useSearchTags(initialState: SearchTag[] = []): [
     tags: SearchTag[],
     dispatch: Dispatch<SearchTagsActions>
 ] {
@@ -68,7 +68,7 @@ export function useSearchTags(): [
                 return [...state.slice(0, idx), ...state.slice(idx + 1)];
             }
         }
-    }, []);
+    }, initialState);
 }
 
 interface SearchBoxProps extends StackProps {
