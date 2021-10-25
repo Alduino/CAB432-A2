@@ -22,6 +22,7 @@ import {SearchBox, useSearchTags} from "../components/SearchBox";
 import {searchEndpoint} from "../hooks/api-client";
 import useDebouncedState from "../hooks/useDebouncedState";
 import {useShortStale} from "../hooks/useShortStale";
+import {parseTag} from "../utils/parseTag";
 
 interface SearchResultProps {
     result: SearchResponseItem;
@@ -68,10 +69,7 @@ export default function Search() {
         return (
             (Array.isArray(query.tags) ? query.tags.join(",") : query.tags)
                 ?.split(",")
-                .map(tag => ({
-                    kind: "normal",
-                    value: tag
-                })) ?? []
+                .map(parseTag) ?? []
         );
     }, [query.tags]);
 
