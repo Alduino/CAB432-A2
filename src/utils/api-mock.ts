@@ -99,7 +99,7 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
     const resultArticles = new Map<number, SearchMatch[]>();
 
     for (const wordUntrimmed of search.term.split(/\s+/g)) {
-        const word = wordUntrimmed.trim().replace(/[^a-z0-9]/, "");
+        const word = wordUntrimmed.trim().replace(/[^a-z0-9]/gi, "");
         if (!word) continue;
 
         const wordNormalised = word.toLowerCase();
