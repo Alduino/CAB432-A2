@@ -71,6 +71,7 @@ export default function Search() {
         return (
             (Array.isArray(query.tags) ? query.tags.join(",") : query.tags)
                 ?.split(",")
+                .filter(Boolean)
                 .map(parseTag) ?? []
         );
     });

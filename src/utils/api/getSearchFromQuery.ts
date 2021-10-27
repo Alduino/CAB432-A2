@@ -22,6 +22,7 @@ export function getSearchFromQuery(
 
     const tags = (Array.isArray(query.tags) ? query.tags : [query.tags ?? ""])
         .flatMap(tagList => tagList.split(","))
+        .filter(Boolean)
         .map(parseTag);
 
     return {term, tags};
