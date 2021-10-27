@@ -18,7 +18,7 @@ import {
 import {
     Dispatch,
     KeyboardEventHandler,
-    useCallback,
+    useCallback, useDebugValue,
     useMemo,
     useReducer,
     useRef,
@@ -56,7 +56,7 @@ export type SearchTagsActions = MapActionObjectToActions<{
 export function useSearchTags(
     initialState: SearchTag[] = []
 ): [tags: SearchTag[], dispatch: Dispatch<SearchTagsActions>] {
-    return useReducer((state: SearchTag[], action: SearchTagsActions) => {
+    const [value, dispatch] = useReducer((state: SearchTag[], action: SearchTagsActions) => {
         switch (action.type) {
             case "pop":
                 return state.slice(0, state.length - 1);
@@ -70,6 +70,10 @@ export function useSearchTags(
             }
         }
     }, initialState);
+
+    useDebugValue(value.map(tag => `${tag.kind}:${tag.value}`));
+
+    return [value, dispatch];
 }
 
 interface SearchBoxProps extends StackProps {
