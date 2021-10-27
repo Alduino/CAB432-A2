@@ -12,6 +12,7 @@ import {
 import NextLink from "next/link";
 import {useRouter} from "next/router";
 import {useEffect, useMemo, useState} from "react";
+import useConstant from "use-constant";
 import SearchRequest from "../api-types/SearchRequest";
 import {SearchResponseItem} from "../api-types/SearchResponse";
 import {SearchTag} from "../api-types/SearchTag";
@@ -22,6 +23,7 @@ import {SearchBox, useSearchTags} from "../components/SearchBox";
 import {searchEndpoint} from "../hooks/api-client";
 import useDebouncedState from "../hooks/useDebouncedState";
 import {useShortStale} from "../hooks/useShortStale";
+import {stopCollectingSearchTerm} from "../utils/collect-search-term";
 import {parseTag} from "../utils/parseTag";
 
 interface SearchResultProps {
@@ -65,15 +67,23 @@ function SearchResult({result}: SearchResultProps) {
 export default function Search() {
     const {query} = useRouter();
 
-    const initialTags: SearchTag[] = useMemo(() => {
+    const initialTags: SearchTag[] = useConstant(() => {
         return (
             (Array.isArray(query.tags) ? query.tags.join(",") : query.tags)
                 ?.split(",")
                 .map(parseTag) ?? []
         );
-    }, [query.tags]);
+    });
 
-    const [textboxValue, setTextboxValue] = useState("");
+    const initialTerm = useConstant(() => {
+        const collectedSearch = stopCollectingSearchTerm();
+        if (collectedSearch) return collectedSearch;
+
+        if (Array.isArray(query.term)) return query.term.join(" ");
+        return query.term ?? "";
+    });
+
+    const [textboxValue, setTextboxValue] = useState(initialTerm);
     const [searchTerm, setSearchTerm] = useDebouncedState(textboxValue, 200);
     const [searchTags, searchTagsDispatch] = useSearchTags(initialTags);
 

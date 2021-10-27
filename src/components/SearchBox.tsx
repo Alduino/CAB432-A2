@@ -32,7 +32,7 @@ type MapActionObjectToActions<T> = {
     [Key in keyof T]: T[Key] extends void ? {type: Key} : {type: Key} & T[Key];
 }[keyof T];
 
-type SearchTagsActions = MapActionObjectToActions<{
+export type SearchTagsActions = MapActionObjectToActions<{
     /**
      * Adds a new tag to the search
      */
@@ -301,6 +301,7 @@ export function SearchBox({
                     onKeyDown={handleKeydown}
                     onChange={ev => onTermChanged?.(ev.target.value)}
                     onFocus={cancelTagEdit}
+                    autoFocus
                 />
                 <InputRightElement
                     as={IconButton}
