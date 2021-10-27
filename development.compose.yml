@@ -1,0 +1,14 @@
+version: "3"
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: dontlook
+      POSTGRES_USER: artiller
+      POSTGRES_DB: artiller
+    ports:
+      - "5436:5432"
+  redis:
+    image: redis
+    ports:
+      - "5437:6379"

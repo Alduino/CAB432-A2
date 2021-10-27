@@ -2,13 +2,10 @@ import {NextApiRequest, NextApiResponse} from "next";
 import ApiError, {isApiError} from "../api-types/ApiError";
 import Article from "../api-types/Article";
 import SearchRequest from "../api-types/SearchRequest";
-import {
-    SearchResponse,
-    SearchResponseItem,
-    SearchResponseTag
-} from "../api-types/SearchResponse";
-import cut, {mergeCutRanges} from "./cut";
-import {parseTag} from "./parseTag";
+import {SearchResponse} from "../api-types/SearchResponse";
+import {SearchMatch} from "./api/SearchMatch";
+import {getSearchFromQuery} from "./api/getSearchFromQuery";
+import {getSearchResponse} from "./api/getSearchResponse";
 
 const articles: Article[] = [
     {
@@ -49,44 +46,11 @@ const articles: Article[] = [
     }
 ];
 
-interface SearchMatch_Range {
-    kind: "title";
-    from: number;
-    to: number;
-}
-
-interface SearchMatch_Indexed {
-    kind: "tag";
-    index: number;
-}
-
-interface SearchMatch_Single {
-    kind: "www" | "author";
-}
-
-type SearchMatch = SearchMatch_Range | SearchMatch_Indexed | SearchMatch_Single;
-
-function getSearchFromQuery(
-    query: Record<string, string | string[]>
-): SearchRequest {
-    const term = Array.isArray(query.term)
-        ? query.term.join(" ")
-        : query.term ?? "";
-
-    const tags = (Array.isArray(query.tags) ? query.tags : [query.tags ?? ""])
-        .flatMap(tagList => tagList.split(","))
-        .map(parseTag);
-
-    return {term, tags};
-}
-
-export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
-    const search: SearchRequest = getSearchFromQuery(req.query);
-
+function matchArticlesBySearch(search: SearchRequest) {
     /**
      * Maps the index of the article to an array of matches
      */
-    const resultArticles = new Map<number, SearchMatch[]>();
+    const resultMatches = new Map<number, SearchMatch[]>();
 
     for (const wordUntrimmed of search.term.split(/\s+/g)) {
         const word = wordUntrimmed.trim().replace(/[^a-z0-9]/gi, "");
@@ -99,28 +63,27 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
             const matchIndex = titleNormalised.indexOf(wordNormalised);
             if (matchIndex === -1) return;
 
-            const matchArray = resultArticles.get(i) ?? [];
+            const matchArray = resultMatches.get(i) ?? [];
             matchArray.push({
                 kind: "title",
                 from: matchIndex,
                 to: matchIndex + word.length
             });
 
-            if (!resultArticles.has(i)) resultArticles.set(i, matchArray);
+            if (!resultMatches.has(i)) resultMatches.set(i, matchArray);
         });
     }
 
     for (const tag of search.tags) {
         articles.forEach((article, i) => {
-            const matchArray = resultArticles.get(i) ?? [];
+            const matchArray = resultMatches.get(i) ?? [];
             let matched = false;
 
             switch (tag.kind) {
                 case "normal": {
-                    const tagIndex = article.tags.indexOf(tag.value);
-                    if (tagIndex === -1) break;
+                    if (!article.tags.includes(tag.value)) break;
                     matched = true;
-                    matchArray.push({kind: "tag", index: tagIndex});
+                    matchArray.push({kind: "tag", value: tag.value});
                     break;
                 }
                 case "author":
@@ -140,51 +103,20 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
                 }
             }
 
-            if (matched && !resultArticles.has(i)) {
-                resultArticles.set(i, matchArray);
+            if (matched && !resultMatches.has(i)) {
+                resultMatches.set(i, matchArray);
             }
         });
     }
 
-    const matchedArticles: SearchResponseItem[] = Array.from(
-        resultArticles.entries()
-    )
-        .sort((a, b) => b[1].length - a[1].length)
-        .map(([idx, matches]) => {
-            const article = articles[idx];
+    const resultArticles = new Map(articles.map((article, i) => [i, article]));
 
-            const titleCutPoints = mergeCutRanges(
-                (
-                    matches.filter(
-                        match => match.kind === "title"
-                    ) as SearchMatch_Range[]
-                ).map(match => [match.from, match.to])
-            ).flat();
+    return getSearchResponse(resultArticles, resultMatches);
+}
 
-            const tagMatches = new Set(
-                (
-                    matches.filter(
-                        match => match.kind === "tag"
-                    ) as SearchMatch_Indexed[]
-                ).map(match => match.index)
-            );
-
-            const tags: SearchResponseTag[] = article.tags.map((tag, i) => ({
-                name: tag,
-                wasMatched: tagMatches.has(i)
-            }));
-
-            return {
-                id: article.id,
-                title: cut(article.title, titleCutPoints),
-                link: article.link,
-                wasLinkMatch: matches.some(it => it.kind === "www"),
-                author: article.author,
-                wasAuthorMatch: matches.some(it => it.kind === "author"),
-                published: article.published,
-                tags
-            };
-        });
+export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
+    const search: SearchRequest = getSearchFromQuery(req.query);
+    const matchedArticles = matchArticlesBySearch(search);
 
     res.json({
         results: matchedArticles

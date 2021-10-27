@@ -20,6 +20,8 @@ export function beginCollectingSearchTerm(pre: string) {
  * Stops collecting the search term and returns it
  */
 export function stopCollectingSearchTerm(): string {
+    if (typeof window === "undefined") return "";
+
     const targetElement = document.getElementById(collectorInputId) as HTMLInputElement;
     if (!targetElement) return "";
     targetElement.remove();
