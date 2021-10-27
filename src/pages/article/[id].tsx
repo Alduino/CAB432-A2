@@ -73,14 +73,18 @@ export default function Article({article}: ArticleProps) {
                             </Button>
                         </HStack>
                         <Box flexGrow={1} />
-                        <HStack spacing={1} fontSize="sm" opacity={0.8}>
-                            <Text opacity={0.8}>
-                                Something broken? Read this article on
-                            </Text>
-                            <Link target="_blank" href={article.link}>
-                                {new URL(article.link).host}
-                            </Link>
-                        </HStack>
+                        <Wrap spacing={1} fontSize="sm" opacity={0.8}>
+                            <WrapItem>
+                                <Text opacity={0.8}>
+                                    Something broken? Read this article on
+                                </Text>
+                            </WrapItem>
+                            <WrapItem>
+                                <Link target="_blank" href={article.link}>
+                                    {new URL(article.link).host}
+                                </Link>
+                            </WrapItem>
+                        </Wrap>
                     </Stack>
                     <Stack w="62%" p={12} spacing={4} flexShrink={0}>
                         {article.paragraphs.map((p, i) => (
