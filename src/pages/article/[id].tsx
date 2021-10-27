@@ -82,7 +82,7 @@ export default function Article({article}: ArticleProps) {
                             </Link>
                         </HStack>
                     </Stack>
-                    <Stack w="62%" p={12} spacing={4}>
+                    <Stack w="62%" p={12} spacing={4} flexShrink={0}>
                         {article.paragraphs.map((p, i) => (
                             <Text key={i}>{p}</Text>
                         ))}
