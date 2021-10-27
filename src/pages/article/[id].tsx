@@ -7,7 +7,7 @@ import {
     Stack,
     StackDivider,
     Tag,
-    Text
+    Text, Wrap, WrapItem
 } from "@chakra-ui/react";
 import {GetServerSideProps} from "next";
 import NextLink from "next/link";
@@ -47,19 +47,21 @@ export default function Article({article}: ArticleProps) {
                             published={new Date(article.published)}
                             linkToSearch
                         />
-                        <HStack>
+                        <Wrap>
                             {article.tags.map(tag => (
-                                <LinkBox key={tag}>
-                                    <Tag>
-                                        <NextLink href={`/search?tags=normal_${encodeURIComponent(tag)}`} as="/search" passHref>
-                                            <LinkOverlay>
-                                                {tag}
-                                            </LinkOverlay>
-                                        </NextLink>
-                                    </Tag>
-                                </LinkBox>
+                                <WrapItem key={tag}>
+                                    <LinkBox>
+                                        <Tag>
+                                            <NextLink href={`/search?tags=normal_${encodeURIComponent(tag)}`} as="/search" passHref>
+                                                <LinkOverlay>
+                                                    {tag}
+                                                </LinkOverlay>
+                                            </NextLink>
+                                        </Tag>
+                                    </LinkBox>
+                                </WrapItem>
                             ))}
-                        </HStack>
+                        </Wrap>
                         <Box />
                         <HStack>
                             <Button
