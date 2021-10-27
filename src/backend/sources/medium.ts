@@ -86,7 +86,7 @@ const mediumSource: Source<"medium", string> = {
                 tagSlug: tag,
                 mode: "HOT"
             })
-        ).tagFeed.items.map(item => item.post.id);
+        ).tagFeed?.items.map(item => item.post.id) ?? [];
     },
     async loadArticlesBySourceArticleIds(
         sourceArticleIds: string[]
