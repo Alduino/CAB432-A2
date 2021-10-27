@@ -82,6 +82,7 @@ interface SearchBoxProps extends StackProps {
     tagsDispatch?: Dispatch<SearchTagsActions>;
 
     onTermChanged?(term: string): void;
+    onManualTrigger?(): void;
 }
 
 export function SearchBox({
@@ -89,6 +90,7 @@ export function SearchBox({
     tags,
     onTermChanged,
     tagsDispatch,
+    onManualTrigger,
     ...props
 }: SearchBoxProps) {
     const mainInput = useRef<HTMLInputElement>();
@@ -313,6 +315,7 @@ export function SearchBox({
                     variant="ghost"
                     color="gray.500"
                     icon={<SearchIcon />}
+                    onClick={onManualTrigger}
                 />
             </InputGroup>
         </HStack>

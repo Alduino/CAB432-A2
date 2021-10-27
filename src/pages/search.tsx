@@ -145,6 +145,7 @@ export default function Search() {
                         tags={searchTags}
                         onTermChanged={setTextboxValue}
                         tagsDispatch={searchTagsDispatch}
+                        onManualTrigger={triggerSearchRequest}
                     />
                     <Stack spacing={4}>
                         {staleSearch ? (
