@@ -15,10 +15,12 @@ import {useRouter} from "next/router";
 import {useCallback} from "react";
 import {isApiError} from "../../api-types/ApiError";
 import ArticleType from "../../api-types/Article";
+import {getArticleResult} from "../../backend/article";
 import {ByLine} from "../../components/ByLine";
 import {Container} from "../../components/Container";
 import {MainStack} from "../../components/MainStack";
-import {getArticleResult} from "../../utils/api-mock";
+import {getMockedArticleResult} from "../../utils/api-mock";
+import shouldMock from "../../utils/shouldMock";
 
 interface ArticleProps {
     article: ArticleType;
@@ -93,7 +95,7 @@ export const getServerSideProps: GetServerSideProps<
     ArticleProps,
     {id: string}
 > = async ctx => {
-    const result = getArticleResult(ctx.params);
+    const result = shouldMock() ? getMockedArticleResult(ctx.params) : await getArticleResult(ctx.params);
 
     if (isApiError(result)) {
         return {

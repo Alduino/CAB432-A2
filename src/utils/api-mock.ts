@@ -123,7 +123,7 @@ export function mockSearch(req: NextApiRequest, res: NextApiResponse) {
     } as SearchResponse);
 }
 
-export function getArticleResult(
+export function getMockedArticleResult(
     query: Record<string, string | string[]>
 ): Article | ApiError {
     if (!query.id) {
@@ -152,7 +152,7 @@ export function getArticleResult(
 }
 
 export function mockArticle(req: NextApiRequest, res: NextApiResponse) {
-    const result = getArticleResult(req.query);
+    const result = getMockedArticleResult(req.query);
 
     if (isApiError(result)) {
         res.status(result.error === "NOT_FOUND" ? 404 : 400);

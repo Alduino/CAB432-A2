@@ -10,15 +10,20 @@ const articleTags = () => db<DatabaseArticleTag>(ArtillerTable.articleTags);
 const parseQueue = () => db<DatabaseParseQueueItem>(ArtillerTable.parseQueue);
 
 export async function getArticleById(id: string): Promise<Article | null> {
-    const article = await articles().first("*").where({id});
-    if (!article) return null;
+    const dbArticle = await articles().first("*").where({id});
+    if (!dbArticle) return null;
     const tags = await articleTags()
         .select("name")
         .where({article_id: id})
         .then(res => res.map(tag => tag.name));
 
     return {
-        ...article,
+        id: dbArticle.id,
+        title: dbArticle.title,
+        author: dbArticle.author,
+        link: dbArticle.link,
+        published: dbArticle.published.toString(),
+        paragraphs: dbArticle.paragraphs,
         tags
     };
 }
@@ -72,7 +77,7 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
         title: dbArticle.title,
         author: dbArticle.author,
         link: dbArticle.link,
-        published: dbArticle.published,
+        published: dbArticle.published.toString(),
         paragraphs: dbArticle.paragraphs,
         tags: tags.get(dbArticle.id).map(t => t.name)
     }));
