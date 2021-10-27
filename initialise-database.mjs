@@ -21,23 +21,19 @@ console.log("Initialising the database schema");
 
 await knex.schema.createTable("articles", table => {
     table.uuid("id").primary();
+    table.text("source_id").unique();
     table.specificType("title", "citext").notNullable();
     table.specificType("author", "citext").index().notNullable();
-    table.string("link").notNullable();
+    table.text("link").notNullable();
     table.specificType("link_domain", "citext").index().notNullable();
-    table.dateTime("published", {useTz: false}).defaultTo(knex.fn.now()).notNullable();
+    table.dateTime("published").defaultTo(knex.fn.now()).notNullable();
     table.specificType("paragraphs", "text ARRAY").notNullable();
 });
 
 await knex.schema.createTable("article_tags", table => {
     table.uuid("id").primary();
     table.uuid("article_id").references("id").inTable("articles").notNullable();
-    table.string("name").index().notNullable();
-});
-
-await knex.schema.createTable("parse_queue", table => {
-    table.uuid("id").primary();
-    table.uuid("article_id").references("id").inTable("articles");
+    table.text("name").index().notNullable();
 });
 
 console.log("Done");

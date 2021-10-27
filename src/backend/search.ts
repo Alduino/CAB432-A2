@@ -3,15 +3,15 @@ import {NextApiRequest, NextApiResponse} from "next";
 import SearchRequest from "../api-types/SearchRequest";
 import {SearchResponse} from "../api-types/SearchResponse";
 import {SearchMatch} from "../utils/api/SearchMatch";
+import {getArticleIdsByTag} from "../utils/api/getArticleIdsByTag";
 import getMatchableWords from "../utils/api/getMatchableWords";
+import {getMaybeCachedArticlesByIds} from "../utils/api/getMaybeCachedArticleById";
 import {getSearchFromQuery} from "../utils/api/getSearchFromQuery";
 import {getSearchResponse} from "../utils/api/getSearchResponse";
 import {
     getArticleIdsByAuthors,
     getArticleIdsByDomains,
-    getArticleIdsByMatchingWord,
-    getArticleIdsByTag,
-    getArticlesByIds
+    getArticleIdsByMatchingWord
 } from "../utils/database";
 
 async function matchArticlesBySearch(search: SearchRequest) {
@@ -78,7 +78,7 @@ async function matchArticlesBySearch(search: SearchRequest) {
         matchArray.push({kind: "www"});
     }
 
-    const matchedArticles = await getArticlesByIds(
+    const matchedArticles = await getMaybeCachedArticlesByIds(
         Array.from(articleMatches.keys())
     );
     const matchedArticlesMap = new Map(

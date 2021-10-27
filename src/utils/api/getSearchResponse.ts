@@ -1,3 +1,4 @@
+import {ok as assert} from "assert";
 import Article from "../../api-types/Article";
 import {
     SearchResponseItem,
@@ -23,6 +24,15 @@ export function getSearchResponse<Id>(
         .sort((a, b) => b[1].length - a[1].length)
         .map(([id, matches]) => {
             const article = articles.get(id);
+
+            assert(
+                article,
+                `${id} ${
+                    articles.has(id)
+                        ? "has a null value for its article"
+                        : "does not have an associated article"
+                }`
+            );
 
             const titleCutPoints = mergeCutRanges(
                 (

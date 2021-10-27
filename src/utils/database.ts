@@ -1,13 +1,16 @@
+import {randomUUID} from "crypto";
 import Article from "../api-types/Article";
 import {ArtillerTable} from "../api-types/Schema";
 import db from "../backend/db";
 import DatabaseArticle from "../backend/db-types/DatabaseArticle";
 import DatabaseArticleTag from "../backend/db-types/DatabaseArticleTag";
-import DatabaseParseQueueItem from "../backend/db-types/DatabaseParseQueueItem";
+import {
+    addCachedArticleIdsToTag,
+    queueArticleForTagDiscovery
+} from "../backend/redis";
 
 const articles = () => db<DatabaseArticle>(ArtillerTable.articles);
 const articleTags = () => db<DatabaseArticleTag>(ArtillerTable.articleTags);
-const parseQueue = () => db<DatabaseParseQueueItem>(ArtillerTable.parseQueue);
 
 export async function getArticleById(id: string): Promise<Article | null> {
     const dbArticle = await articles().first("*").where({id});
@@ -51,7 +54,9 @@ export async function getArticleIdsByAuthors(
 export async function getArticleIdsByDomains(
     domains: string[]
 ): Promise<Set<string>> {
-    const columns = await articles().select("id").whereIn("link_domain", domains);
+    const columns = await articles()
+        .select("id")
+        .whereIn("link_domain", domains);
     return new Set(columns.map(col => col.id));
 }
 
@@ -64,13 +69,13 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
                 async id =>
                     [
                         id,
-                        await articleTags().select("name").where("article_id", id)
+                        await articleTags()
+                            .select("name")
+                            .where("article_id", id)
                     ] as [string, Pick<DatabaseArticleTag, "name">[]]
             )
         )
     );
-
-    console.log(ids);
 
     return dbArticles.map(dbArticle => ({
         id: dbArticle.id,
@@ -81,4 +86,53 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
         paragraphs: dbArticle.paragraphs,
         tags: tags.get(dbArticle.id).map(t => t.name)
     }));
+}
+
+export function getSourceIdString(sourceName: string, sourceId: string) {
+    return `${sourceName}:${sourceId}`;
+}
+
+export async function getArticleIdBySourceId(
+    sourceName: string,
+    sourceId: string
+): Promise<string | null> {
+    const sourceIdString = getSourceIdString(sourceName, sourceId);
+    const dbArticle = await articles()
+        .first("id")
+        .where("source_id", sourceIdString);
+    return dbArticle?.id;
+}
+
+export async function createArticle(
+    sourceName: string,
+    sourceId: string,
+    article: Omit<Article, "id">
+): Promise<string> {
+    const dbArticle: DatabaseArticle = {
+        id: randomUUID(),
+        source_id: getSourceIdString(sourceName, sourceId),
+        title: article.title,
+        author: article.author,
+        link: article.link,
+        link_domain: new URL(article.link).host,
+        published: new Date(article.published),
+        paragraphs: article.paragraphs
+    };
+
+    const dbTags: DatabaseArticleTag[] = article.tags.map(tag => ({
+        id: randomUUID(),
+        article_id: dbArticle.id,
+        name: tag
+    }));
+
+    await articles().insert(dbArticle);
+    await articleTags().insert(dbTags);
+
+    await Promise.all(
+        article.tags.map(tag => addCachedArticleIdsToTag(tag, [dbArticle.id]))
+    );
+
+    await queueArticleForTagDiscovery(dbArticle.id);
+
+    return dbArticle.id;
 }

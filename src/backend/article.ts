@@ -1,7 +1,7 @@
 import {NextApiRequest, NextApiResponse} from "next";
 import ApiError, {isApiError} from "../api-types/ApiError";
 import Article from "../api-types/Article";
-import {getArticleById} from "../utils/database";
+import getMaybeCachedArticleById from "../utils/api/getMaybeCachedArticleById";
 
 export async function getArticleResult(
     query: Record<string, string | string[]>
@@ -23,7 +23,15 @@ export async function getArticleResult(
     }
 
     try {
-        return await getArticleById(id);
+        const article = await getMaybeCachedArticleById(id);
+
+        if (article) {
+            return article;
+        } else {
+            return {
+                error: "NOT_FOUND"
+            };
+        }
     } catch {
         return {
             error: "INVALID_PARAM",
