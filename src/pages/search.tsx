@@ -1,5 +1,9 @@
 import {useFetch} from "@alduino/api-utils";
 import {
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    AlertTitle,
     Heading,
     HStack,
     Link,
@@ -99,6 +103,7 @@ export default function Search() {
     const {
         result: searchResults,
         loading: searchLoading,
+        error: searchError,
         execute: triggerSearchRequest,
         set: overrideSearchResults
     } = useFetch(searchEndpoint, searchRequest);
@@ -156,6 +161,15 @@ export default function Search() {
                                     search
                                 </Text>
                             )
+                        ) : searchError ? (
+                            <Alert status="error">
+                                <AlertIcon />
+                                <AlertTitle>Oops!</AlertTitle>
+                                <AlertDescription>
+                                    For some reason, your search failed. We've
+                                    already been notified.
+                                </AlertDescription>
+                            </Alert>
                         ) : (
                             <Spinner />
                         )}
