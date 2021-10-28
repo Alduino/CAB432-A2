@@ -26,6 +26,7 @@ import {ByLine} from "../components/ByLine";
 import {Container} from "../components/Container";
 import {MainStack} from "../components/MainStack";
 import {SearchBox, useSearchTags} from "../components/SearchBox";
+import {TagsLoadingNotification} from "../components/TagsLoadingNotification";
 import {searchEndpoint} from "../hooks/api-client";
 import useDebouncedState from "../hooks/useDebouncedState";
 import {useShortStale} from "../hooks/useShortStale";
@@ -66,6 +67,7 @@ function SearchResult({result}: SearchResultProps) {
                         </Tag>
                     </WrapItem>
                 ))}
+                {result.areExtraTagsLoading && <TagsLoadingNotification />}
             </Wrap>
         </Stack>
     );

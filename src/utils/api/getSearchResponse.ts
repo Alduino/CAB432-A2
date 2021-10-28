@@ -64,6 +64,7 @@ export function getSearchResponse<Id>(
                 author: article.author,
                 wasAuthorMatch: matches.some(it => it.kind === "author"),
                 published: article.published,
+                areExtraTagsLoading: article.areExtraTagsLoading,
                 tags
             };
         });

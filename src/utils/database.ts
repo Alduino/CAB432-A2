@@ -17,6 +17,8 @@ export async function getArticleById(id: string): Promise<Article | null> {
         .where({article_id: id})
         .then(res => res.map(tag => tag.name));
 
+    const areExtraTagsLoading = await tagDiscoveryQueue.has(id);
+
     return {
         id: dbArticle.id,
         title: dbArticle.title,
@@ -24,6 +26,7 @@ export async function getArticleById(id: string): Promise<Article | null> {
         link: dbArticle.link,
         published: dbArticle.published.toString(),
         paragraphs: dbArticle.paragraphs,
+        areExtraTagsLoading,
         tags
     };
 }
@@ -74,6 +77,15 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
         )
     );
 
+    const loadingStates = new Map(
+        await Promise.all(
+            ids.map(
+                async id =>
+                    [id, await tagDiscoveryQueue.has(id)] as [string, boolean]
+            )
+        )
+    );
+
     return dbArticles.map(dbArticle => ({
         id: dbArticle.id,
         title: dbArticle.title,
@@ -81,6 +93,7 @@ export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
         link: dbArticle.link,
         published: dbArticle.published.toString(),
         paragraphs: dbArticle.paragraphs,
+        areExtraTagsLoading: loadingStates.get(dbArticle.id),
         tags: tags.get(dbArticle.id).map(t => t.name)
     }));
 }
@@ -103,7 +116,7 @@ export async function getArticleIdBySourceId(
 export async function createArticle(
     sourceName: string,
     sourceId: string,
-    article: Omit<Article, "id">
+    article: Omit<Article, "id" | "areExtraTagsLoading">
 ): Promise<string> {
     const dbArticle: DatabaseArticle = {
         id: randomUUID(),

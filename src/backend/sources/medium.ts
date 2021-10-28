@@ -93,7 +93,7 @@ const mediumSource: Source<"medium", string> = {
     },
     async loadArticlesBySourceArticleIds(
         sourceArticleIds: string[]
-    ): Promise<ReadonlyMap<string, Omit<Article, "id">>> {
+    ): Promise<ReadonlyMap<string, Omit<Article, "id" | "areExtraTagsLoading">>> {
         // language=graphql
         const query = `
             query PostViewerEdgeContent($postId: ID!) {
@@ -146,7 +146,7 @@ const mediumSource: Source<"medium", string> = {
                                 .map(el => el.text),
                             published: new Date(article.updatedAt).toString()
                         }
-                    ] as [string, Omit<Article, "id">];
+                    ] as [string, Omit<Article, "id" | "areExtraTagsLoading">];
                 })
             )
         );

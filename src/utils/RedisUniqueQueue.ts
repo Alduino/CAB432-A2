@@ -41,6 +41,15 @@ export default class RedisUniqueQueue {
     }
 
     /**
+     * Checks if the specified item is in the queue
+     */
+    has(value: string): Promise<boolean> {
+        return this.redis
+            .sismember(this.indexKey, value)
+            .then(res => res === 1);
+    }
+
+    /**
      * Attempts to add an item to the queue. If it already exists, it will not
      * be added again, and `false` will be returned. Otherwise, it will be added
      * and `true` will be returned.

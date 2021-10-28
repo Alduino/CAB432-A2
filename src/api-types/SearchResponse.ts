@@ -73,6 +73,12 @@ export interface SearchResponseItem {
     published: string;
 
     /**
+     * If this is true, this article is in the queue to have extra tags
+     * generated for it
+     */
+    areExtraTagsLoading: boolean;
+
+    /**
      * The tags that this item has, and whether or not they matched
      */
     tags: SearchResponseTag[];

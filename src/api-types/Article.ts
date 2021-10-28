@@ -25,6 +25,12 @@ export default interface Article {
     tags: string[];
 
     /**
+     * If this is true, this article is in the queue to have extra tags
+     * generated for it
+     */
+    areExtraTagsLoading: boolean;
+
+    /**
      * The date that the article was published, converted to a ECMA-262 string
      */
     published: string;

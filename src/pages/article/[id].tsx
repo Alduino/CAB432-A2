@@ -3,11 +3,15 @@ import {
     Button,
     Heading,
     HStack,
-    Link, LinkBox, LinkOverlay,
+    Link,
+    LinkBox,
+    LinkOverlay,
     Stack,
     StackDivider,
     Tag,
-    Text, Wrap, WrapItem
+    Text,
+    Wrap,
+    WrapItem
 } from "@chakra-ui/react";
 import {GetServerSideProps} from "next";
 import NextLink from "next/link";
@@ -19,6 +23,7 @@ import {getArticleResult} from "../../backend/article";
 import {ByLine} from "../../components/ByLine";
 import {Container} from "../../components/Container";
 import {MainStack} from "../../components/MainStack";
+import {TagsLoadingNotification} from "../../components/TagsLoadingNotification";
 import {getMockedArticleResult} from "../../utils/api-mock";
 import shouldMock from "../../utils/shouldMock";
 
@@ -31,7 +36,9 @@ export default function Article({article}: ArticleProps) {
 
     const findSimilarArticles = useCallback(() => {
         push(
-            `/search?tags=${article.tags.map(t => `normal_${encodeURIComponent(t)}`).join(",")},author_${encodeURIComponent(article.author)}`,
+            `/search?tags=${article.tags
+                .map(t => `normal_${encodeURIComponent(t)}`)
+                .join(",")},author_${encodeURIComponent(article.author)}`,
             "/search"
         );
     }, [push, article.tags, article.author]);
@@ -39,7 +46,11 @@ export default function Article({article}: ArticleProps) {
     return (
         <Container title={`${article.title} - Artiller`}>
             <MainStack>
-                <Stack height="full" direction={["column", null, "row"]} divider={<StackDivider />}>
+                <Stack
+                    height="full"
+                    direction={["column", null, "row"]}
+                    divider={<StackDivider />}
+                >
                     <Stack flexGrow={1} p={[4, null, 8]} spacing={4}>
                         <Heading size="md">{article.title}</Heading>
                         <ByLine
@@ -52,15 +63,22 @@ export default function Article({article}: ArticleProps) {
                                 <WrapItem key={tag}>
                                     <LinkBox>
                                         <Tag>
-                                            <NextLink href={`/search?tags=normal_${encodeURIComponent(tag)}`} as="/search" passHref>
-                                                <LinkOverlay>
-                                                    {tag}
-                                                </LinkOverlay>
+                                            <NextLink
+                                                href={`/search?tags=normal_${encodeURIComponent(
+                                                    tag
+                                                )}`}
+                                                as="/search"
+                                                passHref
+                                            >
+                                                <LinkOverlay>{tag}</LinkOverlay>
                                             </NextLink>
                                         </Tag>
                                     </LinkBox>
                                 </WrapItem>
                             ))}
+                            {article.areExtraTagsLoading && (
+                                <TagsLoadingNotification />
+                            )}
                         </Wrap>
                         <Box />
                         <HStack>
@@ -86,7 +104,13 @@ export default function Article({article}: ArticleProps) {
                             </WrapItem>
                         </Wrap>
                     </Stack>
-                    <Stack w={["full", null, "62%"]} py={[4, null, 12]} px={[2, null, 12]} spacing={4} flexShrink={0}>
+                    <Stack
+                        w={["full", null, "62%"]}
+                        py={[4, null, 12]}
+                        px={[2, null, 12]}
+                        spacing={4}
+                        flexShrink={0}
+                    >
                         {article.paragraphs.map((p, i) => (
                             <Text key={i}>{p}</Text>
                         ))}

@@ -14,5 +14,5 @@ export default interface Source<Name extends string, SourceArticleId> {
      */
     loadArticlesBySourceArticleIds(
         sourceArticleIds: SourceArticleId[]
-    ): Promise<ReadonlyMap<string, Omit<Article, "id">>>;
+    ): Promise<ReadonlyMap<string, Omit<Article, "id" | "areExtraTagsLoading">>>;
 }
