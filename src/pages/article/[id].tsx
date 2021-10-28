@@ -39,8 +39,8 @@ export default function Article({article}: ArticleProps) {
     return (
         <Container title={`${article.title} - Artiller`}>
             <MainStack>
-                <Stack height="full" direction="row" divider={<StackDivider />}>
-                    <Stack flexGrow={1} p={8} spacing={4}>
+                <Stack height="full" direction={["column", null, "row"]} divider={<StackDivider />}>
+                    <Stack flexGrow={1} p={[4, null, 8]} spacing={4}>
                         <Heading size="md">{article.title}</Heading>
                         <ByLine
                             author={article.author}
@@ -86,7 +86,7 @@ export default function Article({article}: ArticleProps) {
                             </WrapItem>
                         </Wrap>
                     </Stack>
-                    <Stack w="62%" p={12} spacing={4} flexShrink={0}>
+                    <Stack w={["full", null, "62%"]} py={[4, null, 12]} px={[2, null, 12]} spacing={4} flexShrink={0}>
                         {article.paragraphs.map((p, i) => (
                             <Text key={i}>{p}</Text>
                         ))}

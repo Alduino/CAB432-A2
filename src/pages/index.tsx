@@ -1,5 +1,5 @@
 import {useSwr} from "@alduino/api-utils";
-import {Box, Center, Heading, Text, VStack} from "@chakra-ui/react";
+import {Box, Heading, Stack, Text, VStack} from "@chakra-ui/react";
 import {GetServerSideProps} from "next";
 import {useRouter} from "next/router";
 import {ReactElement, useCallback} from "react";
@@ -35,26 +35,31 @@ export default function Index({stats: statsInitial}: IndexProps): ReactElement {
 
     return (
         <Container title="Artiller">
-            <Center flexDir="column">
+            <Stack w={["full", "lg"]}>
+                <Box flexGrow={0.4} />
                 <VStack spacing={6}>
                     <Logo size={16} />
                     <Heading size="md">Artiller</Heading>
                     <SearchBox
+                        w="full"
                         term=""
                         tags={emptyTags}
                         onTermChanged={handleTermChanged}
                     />
-                    {stats && (
-                        <Text fontSize="xs" opacity={0.5} w="md">
+                </VStack>
+                <Box flexGrow={1} />
+                {stats && (
+                    <VStack spacing={1} fontSize="xs" opacity={0.5}>
+                        <Text>
                             So far, we&rsquo;ve indexed more than {stats.tags}{" "}
                             tags across {stats.articles} articles by{" "}
                             {stats.authors} creators, with{" "}
-                            {stats.tagSearchQueueSize} more tags coming soon.
+                            {stats.tagSearchQueueSize} more tags, and tags for{" "}
+                            {stats.tagDiscoveryQueueSize} articles, coming soon.
                         </Text>
-                    )}
-                </VStack>
-                <Box h="30vh" />
-            </Center>
+                    </VStack>
+                )}
+            </Stack>
         </Container>
     );
 }

@@ -1,4 +1,4 @@
-import {chakra, HStack, Link, StackDivider, Text} from "@chakra-ui/react";
+import {chakra, HStack, Link, Stack, StackDivider, Text, useBreakpointValue} from "@chakra-ui/react";
 import NextLink from "next/link";
 import {ReactElement, useMemo} from "react";
 import TimeAgo from "react-timeago";
@@ -20,12 +20,13 @@ export function ByLine({
     wasLinkMatch,
     linkToSearch
 }: ByLineProps): ReactElement {
+    const useStackDivider = useBreakpointValue([false, null, true]);
     const linkHost = useMemo(() => link && new URL(link).hostname, [link]);
 
     const authorText = wasAuthorMatch ? <strong>{author}</strong> : author;
 
     return (
-        <HStack divider={<StackDivider />}>
+        <Stack direction={["column", null, "row"]} divider={useStackDivider && <StackDivider />} spacing={[0, null, 2]}>
             <Text>
                 <chakra.span opacity={0.6}>by </chakra.span>
                 {linkToSearch ? (
@@ -44,9 +45,9 @@ export function ByLine({
                     </>
                 )}
             </Text>
-            <Text>
+            <Text fontSize={["sm", null, "md"]} opacity={[.8, null, 1]}>
                 <TimeAgo date={published} />
             </Text>
-        </HStack>
+        </Stack>
     );
 }

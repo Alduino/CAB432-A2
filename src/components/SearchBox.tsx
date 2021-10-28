@@ -1,24 +1,25 @@
 import {SearchIcon} from "@chakra-ui/icons";
 import {
+    Box,
     Button,
     chakra,
     HStack,
     IconButton,
     Input,
-    InputGroup,
-    InputRightElement,
     Stack,
     StackProps,
     Tag,
     TagCloseButton,
     TagLabel,
     useColorModeValue,
+    useMergeRefs,
     useMultiStyleConfig
 } from "@chakra-ui/react";
 import {
     Dispatch,
     KeyboardEventHandler,
-    useCallback, useDebugValue,
+    useCallback,
+    useDebugValue,
     useMemo,
     useReducer,
     useRef,
@@ -56,20 +57,23 @@ export type SearchTagsActions = MapActionObjectToActions<{
 export function useSearchTags(
     initialState: SearchTag[] = []
 ): [tags: SearchTag[], dispatch: Dispatch<SearchTagsActions>] {
-    const [value, dispatch] = useReducer((state: SearchTag[], action: SearchTagsActions) => {
-        switch (action.type) {
-            case "pop":
-                return state.slice(0, state.length - 1);
-            case "add":
-                return [...state, action.tag];
-            case "remove": {
-                const idx = state.indexOf(action.tag);
-                if (idx === -1)
-                    throw new Error("Cannot remove tag that doesn't exist");
-                return [...state.slice(0, idx), ...state.slice(idx + 1)];
+    const [value, dispatch] = useReducer(
+        (state: SearchTag[], action: SearchTagsActions) => {
+            switch (action.type) {
+                case "pop":
+                    return state.slice(0, state.length - 1);
+                case "add":
+                    return [...state, action.tag];
+                case "remove": {
+                    const idx = state.indexOf(action.tag);
+                    if (idx === -1)
+                        throw new Error("Cannot remove tag that doesn't exist");
+                    return [...state.slice(0, idx), ...state.slice(idx + 1)];
+                }
             }
-        }
-    }, initialState);
+        },
+        initialState
+    );
 
     useDebugValue(value.map(tag => `${tag.kind}:${tag.value}`));
 
@@ -82,6 +86,7 @@ interface SearchBoxProps extends StackProps {
     tagsDispatch?: Dispatch<SearchTagsActions>;
 
     onTermChanged?(term: string): void;
+
     onManualTrigger?(): void;
 }
 
@@ -103,6 +108,9 @@ export function SearchBox({
 
     const [editTagValue, setEditTagValue] = useState("");
     const {width: editTagWidth, ref: editTagRef} = useTextWidth(editTagValue);
+    const {width: mainSearchWidth, ref: mainSearchRef} = useTextWidth(term);
+
+    const mainInputCombinedRef = useMergeRefs(mainInput, mainSearchRef);
 
     const autocompleteItems = useMemo(() => {
         const termTrimmed = term.trim();
@@ -130,7 +138,10 @@ export function SearchBox({
 
     const handleKeydown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
         ev => {
-            const termTrimmed = term.trim();
+            const termNormalised = term
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, "-");
 
             if (ev.key === "Backspace" && term.length === 0) {
                 // Delete the last tag (similar to backspace with normal text)
@@ -144,17 +155,17 @@ export function SearchBox({
                 beginEditingTag(currentAutocompleteIndex);
                 ev.preventDefault();
             } else if (
-                termTrimmed.length > 0 &&
+                termNormalised.length > 0 &&
                 !tags.some(
-                    tag => tag.kind === "normal" && tag.value === termTrimmed
+                    tag => tag.kind === "normal" && tag.value === termNormalised
                 ) &&
                 (ev.key === "," || ev.key === "Enter") &&
-                !termTrimmed.includes(" ")
+                !termNormalised.includes(" ")
             ) {
                 // Add a normal tag
                 tagsDispatch({
                     type: "add",
-                    tag: {kind: "normal", value: termTrimmed}
+                    tag: {kind: "normal", value: termNormalised}
                 });
 
                 onTermChanged("");
@@ -232,92 +243,92 @@ export function SearchBox({
             }}
             {...props}
         >
-            <HStack>
-                {Array.from(tags).map(tag => (
-                    <Tag key={tag.kind + ":" + tag.value}>
-                        <TagLabel>
-                            {tag.kind === "normal" ? "" : tag.kind + ": "}
-                            {tag.value}
-                        </TagLabel>
-                        <TagCloseButton
-                            onClick={() =>
-                                tagsDispatch?.({type: "remove", tag})
-                            }
-                        />
-                    </Tag>
-                ))}
-                {editingTagKind && (
-                    <Tag as={HStack} spacing={0} pr={0}>
-                        <chakra.span cursor="default" userSelect="none">
-                            {editingTagKind}:
-                        </chakra.span>
-                        <Input
-                            ref={editTagRef}
-                            value={editTagValue}
-                            onChange={ev => setEditTagValue(ev.target.value)}
-                            onKeyDown={handleTagEditKeydown}
-                            size="sm"
-                            variant="unstyled"
-                            autoFocus
-                            pl={1}
-                            style={{width: editTagWidth + 8 + "px"}}
-                        />
-                    </Tag>
-                )}
-            </HStack>
-            <InputGroup position="relative">
+            <HStack flexGrow={1} spacing={0} overflowX="auto">
+                <HStack mr={2}>
+                    {Array.from(tags).map(tag => (
+                        <Tag key={tag.kind + ":" + tag.value}>
+                            <TagLabel>
+                                {tag.kind === "normal" ? "" : tag.kind + ": "}
+                                {tag.value}
+                            </TagLabel>
+                            <TagCloseButton
+                                onClick={() =>
+                                    tagsDispatch?.({type: "remove", tag})
+                                }
+                            />
+                        </Tag>
+                    ))}
+                    {editingTagKind && (
+                        <Tag as={HStack} spacing={0} pr={0}>
+                            <chakra.span cursor="default" userSelect="none">
+                                {editingTagKind}:
+                            </chakra.span>
+                            <Input
+                                ref={editTagRef}
+                                value={editTagValue}
+                                onChange={ev => setEditTagValue(ev.target.value)}
+                                onKeyDown={handleTagEditKeydown}
+                                size="sm"
+                                variant="unstyled"
+                                autoFocus
+                                pl={1}
+                                style={{width: editTagWidth + 8 + "px"}}
+                            />
+                        </Tag>
+                    )}
+                </HStack>
                 {autocompleteItems.length && (
-                    <Stack
-                        position="absolute"
-                        zIndex={1}
-                        top={8}
-                        bg={autocompleteBackground}
-                        shadow="md"
-                        spacing={0}
-                        py={2}
-                        rounded="md"
-                        overflow="hidden"
-                        userSelect="none"
-                    >
-                        {autocompleteItems.map((item, i) => (
-                            <Button
-                                key={item}
-                                variant="ghost"
-                                p={2}
-                                rounded={0}
-                                isActive={i === currentAutocompleteIndex}
-                                onClick={() => beginEditingTag(i)}
-                            >
-                                {item}:
-                            </Button>
-                        ))}
-                    </Stack>
+                    <Box position="relative">
+                        <Stack
+                            position="absolute"
+                            zIndex={1}
+                            top={8}
+                            bg={autocompleteBackground}
+                            shadow="md"
+                            spacing={0}
+                            py={2}
+                            rounded="md"
+                            overflow="hidden"
+                            userSelect="none"
+                        >
+                            {autocompleteItems.map((item, i) => (
+                                <Button
+                                    key={item}
+                                    variant="ghost"
+                                    p={2}
+                                    rounded={0}
+                                    isActive={i === currentAutocompleteIndex}
+                                    onClick={() => beginEditingTag(i)}
+                                >
+                                    {item}:
+                                </Button>
+                            ))}
+                        </Stack>
+                    </Box>
                 )}
                 <Input
-                    ref={mainInput}
-                    flexGrow={1}
+                    ref={mainInputCombinedRef}
                     variant="unstyled"
-                    pl={2}
                     py={2}
+                    flexGrow={1}
+                    flexShrink={0}
                     type="search"
-                    placeholder={
-                        tags.length ? "Search" : "Search or paste a URL"
-                    }
+                    placeholder={tags.length ? "Search" : "Search or paste a URL"}
                     value={term}
                     onKeyDown={handleKeydown}
                     onChange={ev => onTermChanged?.(ev.target.value)}
                     onFocus={cancelTagEdit}
+                    style={{width: `${mainSearchWidth + 8}px`}}
                     autoFocus
                 />
-                <InputRightElement
-                    as={IconButton}
-                    aria-label="Search"
-                    variant="ghost"
-                    color="gray.500"
-                    icon={<SearchIcon />}
-                    onClick={onManualTrigger}
-                />
-            </InputGroup>
+            </HStack>
+            <IconButton
+                aria-label="Search"
+                variant="ghost"
+                color="gray.500"
+                icon={<SearchIcon />}
+                onClick={onManualTrigger}
+            />
         </HStack>
     );
 }

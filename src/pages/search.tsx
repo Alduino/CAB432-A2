@@ -5,13 +5,15 @@ import {
     AlertIcon,
     AlertTitle,
     Heading,
-    HStack,
     Link,
     Spinner,
     Stack,
     StackDivider,
     Tag,
-    Text
+    Text,
+    useBreakpointValue,
+    Wrap,
+    WrapItem
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import {useRouter} from "next/router";
@@ -36,7 +38,7 @@ interface SearchResultProps {
 
 function SearchResult({result}: SearchResultProps) {
     return (
-        <Stack p={4}>
+        <Stack p={[0, null, 4]}>
             <Heading fontWeight="400" size="md">
                 <NextLink href={`/article/${result.id}`} passHref>
                     <Link>
@@ -53,23 +55,26 @@ function SearchResult({result}: SearchResultProps) {
                 wasLinkMatch={result.wasLinkMatch}
                 published={new Date(result.published)}
             />
-            <HStack>
+            <Wrap>
                 {result.tags.map(tag => (
-                    <Tag
-                        key={tag.name}
-                        size="sm"
-                        fontWeight={tag.wasMatched ? "bold" : "normal"}
-                    >
-                        {tag.name}
-                    </Tag>
+                    <WrapItem key={tag.name}>
+                        <Tag
+                            size="sm"
+                            fontWeight={tag.wasMatched ? "bold" : "normal"}
+                        >
+                            {tag.name}
+                        </Tag>
+                    </WrapItem>
                 ))}
-            </HStack>
+            </Wrap>
         </Stack>
     );
 }
 
 export default function Search() {
     const {query} = useRouter();
+
+    const useStackDivider = useBreakpointValue([true, null, false]);
 
     const initialTags: SearchTag[] = useConstant(() => {
         return (
@@ -134,7 +139,7 @@ export default function Search() {
         <Container title={`${title} - Artiller`}>
             <MainStack>
                 <Stack
-                    p={8}
+                    p={[0, null, 8]}
                     direction="column"
                     spacing={6}
                     divider={<StackDivider />}
@@ -147,7 +152,10 @@ export default function Search() {
                         tagsDispatch={searchTagsDispatch}
                         onManualTrigger={triggerSearchRequest}
                     />
-                    <Stack spacing={4}>
+                    <Stack
+                        spacing={4}
+                        divider={useStackDivider && <StackDivider />}
+                    >
                         {staleSearch ? (
                             staleSearch.results.length > 0 ? (
                                 staleSearch.results.map(result => (
