@@ -3,7 +3,7 @@
   "scripts": {
     "dev:app": "next | pino-pretty",
     "dev:worker": "wait-on .next/server/worker.js && dotenv -c -- nodemon ./.next/server/worker.js -w ./.next/server/worker.js | pino-pretty",
-    "dev": "run-p dev:*",
+    "dev": "rm -f .next/server/worker.js && run-p dev:*",
     "build": "next build",
     "start:app": "next start",
     "start:worker": "dotenv -c -- node .next/server/worker.js",

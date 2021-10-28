@@ -5,7 +5,7 @@ import RedisMutex from "../utils/RedisMutex";
 import RedisUniqueQueue from "../utils/RedisUniqueQueue";
 
 export function createRedis(): Redis {
-    return new IORedis(process.env.REDIS_HOST);
+    return new IORedis(process.env.REDIS_HOST, {enableAutoPipelining: true});
 }
 
 /**
@@ -14,7 +14,7 @@ export function createRedis(): Redis {
 export const defaultRedis = createRedis();
 
 function getArticleByIdKey(articleId: string) {
-    return `article:${articleId}`;
+    return `article:${articleId.substring(0, 2)}:${articleId.substring(2)}`;
 }
 
 export async function getCachedArticleById(
@@ -26,7 +26,7 @@ export async function getCachedArticleById(
 
 export async function setCachedArticleById(article: Article): Promise<void> {
     const key = getArticleByIdKey(article.id);
-    await defaultRedis.set(key, JSON.stringify(article));
+    await defaultRedis.set(key, JSON.stringify(article), "EX", 3600, "NX");
 }
 
 function getTagKey(tag: string) {
@@ -57,7 +57,9 @@ function getTagCheckKey(tag: string) {
  */
 export async function shouldQueryMoreArticles(tag: string): Promise<boolean> {
     const key = getTagCheckKey(tag);
-    return !(await defaultRedis.exists(key));
+    const valuesKey = getTagKey(tag);
+    if (!await defaultRedis.exists(key)) return true;
+    return await defaultRedis.scard(valuesKey) < 10;
 }
 
 export async function setQueriedMoreArticles(tag: string): Promise<void> {

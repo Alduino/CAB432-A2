@@ -83,11 +83,13 @@ const mediumSource: Source<"medium", string> = {
         `;
 
         return (
-            await fetchGraphQl<SourceIdByTagResult>(query, {
-                tagSlug: tag,
-                mode: "HOT"
-            })
-        ).tagFeed?.items.map(item => item.post.id) ?? [];
+            (
+                await fetchGraphQl<SourceIdByTagResult>(query, {
+                    tagSlug: tag,
+                    mode: "HOT"
+                })
+            ).tagFeed?.items.map(item => item.post.id) ?? []
+        );
     },
     async loadArticlesBySourceArticleIds(
         sourceArticleIds: string[]

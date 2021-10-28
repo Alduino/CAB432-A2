@@ -2,8 +2,7 @@ import {ok as assert} from "assert";
 import Article from "../../api-types/Article";
 import {
     getCachedArticleIdBySourceIdOrLock,
-    getCachedArticleIdsByTag,
-    setQueriedMoreArticles,
+    getCachedArticleIdsByTag, setQueriedMoreArticles,
     shouldQueryMoreArticles, unsetQueriedMoreArticles
 } from "../../backend/redis";
 import {sources} from "../../backend/sources";
@@ -56,9 +55,9 @@ async function loadArticleBySourceId(
  * @returns The IDs of the articles that were discovered
  */
 export async function queryMoreArticles(tag: string): Promise<string[]> {
-    try {
-        await setQueriedMoreArticles(tag);
+    await setQueriedMoreArticles(tag);
 
+    try {
         return await Promise.all(
             Object.values(sources).map(async source => {
                 const sourceIds = await source.getSourceIdsByTag(tag);
@@ -69,9 +68,9 @@ export async function queryMoreArticles(tag: string): Promise<string[]> {
                 );
             })
         ).then(res => res.flat());
-    } catch (err) {
+    } catch (ex) {
         await unsetQueriedMoreArticles(tag);
-        throw err;
+        throw ex;
     }
 }
 
