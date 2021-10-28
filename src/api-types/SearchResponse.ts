@@ -80,4 +80,5 @@ export interface SearchResponseItem {
 
 export interface SearchResponse {
     results: SearchResponseItem[];
+    count: number;
 }

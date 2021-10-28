@@ -118,7 +118,7 @@ export default function Search() {
         else {
             overrideSearchResults({
                 loading: false,
-                result: {results: []},
+                result: {results: [], count: 0},
                 status: "success",
                 error: undefined
             });
@@ -126,8 +126,8 @@ export default function Search() {
     }, [searchRequest, searchTerm, searchTags]);
 
     const title =
-        searchTerm && searchResults
-            ? `${searchResults.results.length} results`
+        staleSearch?.results.length > 0
+            ? `${staleSearch.count} results`
             : "Search";
 
     return (
@@ -167,8 +167,8 @@ export default function Search() {
                                 <AlertIcon />
                                 <AlertTitle>Oops!</AlertTitle>
                                 <AlertDescription>
-                                    For some reason, your search failed. We've
-                                    already been notified.
+                                    For some reason, your search failed.
+                                    We&rsquo;ve already been notified.
                                 </AlertDescription>
                             </Alert>
                         ) : (

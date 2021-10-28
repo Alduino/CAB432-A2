@@ -1,4 +1,4 @@
-import {ok as assert} from "assert";
+import {match, ok as assert} from "assert";
 import {NextApiRequest, NextApiResponse} from "next";
 import SearchRequest from "../api-types/SearchRequest";
 import {SearchResponse} from "../api-types/SearchResponse";
@@ -92,7 +92,10 @@ async function matchArticlesBySearch(search: SearchRequest) {
         ).map(tag => workerTagSearchQueue.queue(tag))
     );
 
-    return getSearchResponse(matchedArticlesMap, articleMatches);
+    return {
+        topItems: getSearchResponse(matchedArticlesMap, articleMatches),
+        resultsCount: articleMatches.size
+    };
 }
 
 export async function doSearch(req: NextApiRequest, res: NextApiResponse) {
@@ -100,6 +103,7 @@ export async function doSearch(req: NextApiRequest, res: NextApiResponse) {
     const matchedArticles = await matchArticlesBySearch(search);
 
     res.json({
-        results: matchedArticles
+        results: matchedArticles.topItems,
+        count: matchedArticles.resultsCount
     } as SearchResponse);
 }

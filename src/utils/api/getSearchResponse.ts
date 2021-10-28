@@ -22,6 +22,7 @@ export function getSearchResponse<Id>(
 ) {
     const matchedArticles: SearchResponseItem[] = Array.from(matches.entries())
         .sort((a, b) => b[1].length - a[1].length)
+        .slice(0, 20)
         .map(([id, matches]) => {
             const article = articles.get(id);
 

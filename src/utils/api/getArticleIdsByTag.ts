@@ -2,8 +2,10 @@ import {ok as assert} from "assert";
 import Article from "../../api-types/Article";
 import {
     getCachedArticleIdBySourceIdOrLock,
-    getCachedArticleIdsByTag, setQueriedMoreArticles,
-    shouldQueryMoreArticles, unsetQueriedMoreArticles
+    getCachedArticleIdsByTag,
+    setQueriedMoreArticles,
+    shouldQueryMoreArticles,
+    unsetQueriedMoreArticles
 } from "../../backend/redis";
 import {sources} from "../../backend/sources";
 import Source from "../../backend/sources/Source";
@@ -81,7 +83,8 @@ export async function queryMoreArticles(tag: string): Promise<string[]> {
 export async function getArticleIdsByTag(tag: string): Promise<Set<string>> {
     const cachedArticleIds = await getCachedArticleIdsByTag(tag);
 
-    if (!(await shouldQueryMoreArticles(tag))) return new Set(cachedArticleIds);
+    if (cachedArticleIds.length > 10 || !(await shouldQueryMoreArticles(tag)))
+        return new Set(cachedArticleIds);
 
     const calculatedArticleIds = await queryMoreArticles(tag);
 
