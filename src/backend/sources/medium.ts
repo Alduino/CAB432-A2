@@ -1,3 +1,4 @@
+import fetch, {Headers} from "node-fetch";
 import Article from "../../api-types/Article";
 import Source from "./Source";
 

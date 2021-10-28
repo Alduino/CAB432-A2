@@ -13,6 +13,7 @@ import {
     getArticleIdsByDomains,
     getArticleIdsByMatchingWord
 } from "../utils/database";
+import {workerTagSearchQueue} from "./redis";
 
 async function matchArticlesBySearch(search: SearchRequest) {
     // maps the id of each article to the matches it has
@@ -83,6 +84,12 @@ async function matchArticlesBySearch(search: SearchRequest) {
     );
     const matchedArticlesMap = new Map(
         matchedArticles.map(art => [art.id, art])
+    );
+
+    await Promise.all(
+        Array.from(
+            new Set(matchedArticles.flatMap(article => article.tags))
+        ).map(tag => workerTagSearchQueue.queue(tag))
     );
 
     return getSearchResponse(matchedArticlesMap, articleMatches);

@@ -1,9 +1,17 @@
 import {ok as assert} from "assert";
-import IORedis from "ioredis";
+import IORedis, {Redis} from "ioredis";
 import Article from "../api-types/Article";
-import RedisMutex from "../utils/redis-mutex";
+import RedisMutex from "../utils/RedisMutex";
+import RedisUniqueQueue from "../utils/RedisUniqueQueue";
 
-export const redis = new IORedis(process.env.REDIS_HOST);
+export function createRedis(): Redis {
+    return new IORedis(process.env.REDIS_HOST);
+}
+
+/**
+ * A default Redis connection to use for non-blocking queries
+ */
+export const defaultRedis = createRedis();
 
 function getArticleByIdKey(articleId: string) {
     return `article:${articleId}`;
@@ -13,12 +21,12 @@ export async function getCachedArticleById(
     articleId: string
 ): Promise<Article | null> {
     const key = getArticleByIdKey(articleId);
-    return JSON.parse(await redis.get(key));
+    return JSON.parse(await defaultRedis.get(key));
 }
 
 export async function setCachedArticleById(article: Article): Promise<void> {
     const key = getArticleByIdKey(article.id);
-    await redis.set(key, JSON.stringify(article));
+    await defaultRedis.set(key, JSON.stringify(article));
 }
 
 function getTagKey(tag: string) {
@@ -27,7 +35,7 @@ function getTagKey(tag: string) {
 
 export function getCachedArticleIdsByTag(tag: string): Promise<string[]> {
     const key = getTagKey(tag);
-    return redis.smembers(key);
+    return defaultRedis.smembers(key);
 }
 
 export async function addCachedArticleIdsToTag(
@@ -35,8 +43,8 @@ export async function addCachedArticleIdsToTag(
     ids: string[]
 ): Promise<void> {
     const key = getTagKey(tag);
-    await redis.sadd(key, ...ids);
-    await redis.expire(key, 3600);
+    await defaultRedis.sadd(key, ...ids);
+    await defaultRedis.expire(key, 3600);
 }
 
 function getTagCheckKey(tag: string) {
@@ -49,13 +57,18 @@ function getTagCheckKey(tag: string) {
  */
 export async function shouldQueryMoreArticles(tag: string): Promise<boolean> {
     const key = getTagCheckKey(tag);
-    return !(await redis.exists(key));
+    return !(await defaultRedis.exists(key));
 }
 
 export async function setQueriedMoreArticles(tag: string): Promise<void> {
     const key = getTagCheckKey(tag);
-    await redis.set(key, 1);
-    await redis.expire(key, 3600);
+    await defaultRedis.set(key, 1);
+    await defaultRedis.expire(key, 3600);
+}
+
+export async function unsetQueriedMoreArticles(tag: string): Promise<void> {
+    const key = getTagCheckKey(tag);
+    await defaultRedis.del(key);
 }
 
 function getSourceIdToArticleIdKey(
@@ -70,7 +83,7 @@ function getSourceIdToArticleIdMutex(
     sourceId: string
 ): RedisMutex {
     return new RedisMutex(
-        redis,
+        defaultRedis,
         `${getSourceIdToArticleIdKey(sourceName, sourceId)}:mutex`
     );
 }
@@ -80,7 +93,7 @@ export function getCachedArticleIdBySourceId(
     sourceId: string
 ): Promise<string | null> {
     const key = getSourceIdToArticleIdKey(sourceName, sourceId);
-    return redis.get(key);
+    return defaultRedis.get(key);
 }
 
 /**
@@ -98,7 +111,7 @@ export async function getCachedArticleIdBySourceIdOrLock(
     const key = getSourceIdToArticleIdKey(sourceName, sourceId);
 
     // if it already has a value, we don't need to do anything special
-    const hasValue = await redis.exists(key);
+    const hasValue = await defaultRedis.exists(key);
     if (hasValue) {
         const cachedValue = await getCachedArticleIdBySourceId(sourceName, sourceId);
         if (cachedValue) return cachedValue;
@@ -118,7 +131,7 @@ export async function getCachedArticleIdBySourceIdOrLock(
     let resultId;
     const successful = await mutex.with(async () => {
         // one final check to see if we have a value now (at this point, nothing else can set the value so this is safe)
-        if (await redis.exists(key)) return;
+        if (await defaultRedis.exists(key)) return;
 
         const value = await inLock();
         await setCachedArticleIdBySourceId(sourceName, sourceId, value);
@@ -136,41 +149,25 @@ export async function setCachedArticleIdBySourceId(
     articleId: string
 ): Promise<void> {
     const key = getSourceIdToArticleIdKey(sourceName, sourceId);
-    await redis.set(key, articleId);
-    await redis.expire(key, 3600);
+    await defaultRedis.set(key, articleId);
+    await defaultRedis.expire(key, 3600);
 }
 
-const tagDiscoveryListKey = `tag-discovery:list`;
-const tagDiscoveryIndexKey = `tag-discovery:index`;
-
-export async function queueArticleForTagDiscovery(
-    articleId: string
-): Promise<void> {
-    await redis.lpush(tagDiscoveryListKey, articleId);
-    await redis.sadd(tagDiscoveryIndexKey, articleId);
-}
-
-export async function isArticleQueuedForTagDiscovery(
-    articleId: string
-): Promise<boolean> {
-    return redis
-        .sismember(tagDiscoveryIndexKey, articleId)
-        .then(res => res === 1);
-}
+export const workerTagSearchQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:worker-tag-search");
+export const tagDiscoveryQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:tag-discovery");
 
 /**
  * Waits until there `count` are items in the tag discovery queue, and returns
  * them for processing (removing them from the queue)
  */
 export async function dequeueArticlesForTagDiscovery(
+    connection: Redis,
     count: number
 ): Promise<string[]> {
     const items = new Array(count);
 
     for (let i = 0; i < count; i++) {
-        const [, nextItem] = await redis.brpop(tagDiscoveryListKey, 0);
-        await redis.srem(tagDiscoveryIndexKey, nextItem);
-        items[i] = nextItem;
+        items[i] = await tagDiscoveryQueue.dequeue(connection);
     }
 
     return items;

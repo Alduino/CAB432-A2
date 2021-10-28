@@ -1,9 +1,13 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next",
+    "dev:app": "next | pino-pretty",
+    "dev:worker": "wait-on .next/server/worker.js && dotenv -c -- nodemon ./.next/server/worker.js -w ./.next/server/worker.js | pino-pretty",
+    "dev": "run-p dev:*",
     "build": "next build",
-    "start": "next start"
+    "start:app": "next start",
+    "start:worker": "dotenv -c -- node .next/server/worker.js",
+    "start": "run-p start:*"
   },
   "dependencies": {
     "@alduino/api-utils": "^0.4.0",
@@ -18,7 +22,9 @@
     "ioredis": "^4.28.0",
     "knex": "^0.95.11",
     "next": "^11.1.2",
+    "node-fetch": "^3.0.0",
     "pg": "^8.7.1",
+    "pino": "^7.0.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-timeago": "^6.2.1",
@@ -32,13 +38,18 @@
     "@types/react-timeago": "^4.1.3",
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
+    "dotenv-cli": "^4.0.0",
     "eslint": "^8.0.1",
     "eslint-config-next": "^11.1.2",
     "eslint-gitignore": "^0.1.0",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-react": "^7.26.1",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "nodemon": "^2.0.14",
+    "npm-run-all": "^4.1.5",
+    "pino-pretty": "^7.1.0",
     "prettier": "^2.4.1",
-    "typescript": "4.3.2"
+    "typescript": "4.3.2",
+    "wait-on": "^6.0.0"
   }
 }

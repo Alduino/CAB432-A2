@@ -4,7 +4,7 @@ import {
     getCachedArticleIdBySourceIdOrLock,
     getCachedArticleIdsByTag,
     setQueriedMoreArticles,
-    shouldQueryMoreArticles
+    shouldQueryMoreArticles, unsetQueriedMoreArticles
 } from "../../backend/redis";
 import {sources} from "../../backend/sources";
 import Source from "../../backend/sources/Source";
@@ -29,15 +29,50 @@ async function loadArticleBySourceId(
                 .loadArticlesBySourceArticleIds([sourceId])
                 .then(res => res.get(sourceId));
 
-            const articleId = await createArticle(source.id, sourceId, basicArticleInfo);
-            assert(articleId, `createArticle did not return an id for ${source.id}:${sourceId}`);
+            const articleId = await createArticle(
+                source.id,
+                sourceId,
+                basicArticleInfo
+            );
+            assert(
+                articleId,
+                `createArticle did not return an id for ${source.id}:${sourceId}`
+            );
             return articleId;
         }
     );
 
     const article = await getMaybeCachedArticleById(articleId);
-    assert(article, `article ${articleId} (from ${source.id}:${sourceId}) does not exist`);
+    assert(
+        article,
+        `article ${articleId} (from ${source.id}:${sourceId}) does not exist`
+    );
     return article;
+}
+
+/**
+ * Queries every source to find new articles with the specified tag. You should
+ * first check if this actually needs to run, with `shouldQueryMoreArticles`.
+ * @returns The IDs of the articles that were discovered
+ */
+export async function queryMoreArticles(tag: string): Promise<string[]> {
+    try {
+        await setQueriedMoreArticles(tag);
+
+        return await Promise.all(
+            Object.values(sources).map(async source => {
+                const sourceIds = await source.getSourceIdsByTag(tag);
+                return await Promise.all(
+                    sourceIds.map(id =>
+                        loadArticleBySourceId(source, id).then(res => res.id)
+                    )
+                );
+            })
+        ).then(res => res.flat());
+    } catch (err) {
+        await unsetQueriedMoreArticles(tag);
+        throw err;
+    }
 }
 
 /**
@@ -49,18 +84,7 @@ export async function getArticleIdsByTag(tag: string): Promise<Set<string>> {
 
     if (!(await shouldQueryMoreArticles(tag))) return new Set(cachedArticleIds);
 
-    const calculatedArticleIds = await Promise.all(
-        Object.values(sources).map(async source => {
-            const sourceIds = await source.getSourceIdsByTag(tag);
-            return await Promise.all(
-                sourceIds.map(id =>
-                    loadArticleBySourceId(source, id).then(res => res.id)
-                )
-            );
-        })
-    );
-
-    await setQueriedMoreArticles(tag);
+    const calculatedArticleIds = await queryMoreArticles(tag);
 
     return new Set([...calculatedArticleIds.flat(), ...cachedArticleIds]);
 }

@@ -6,7 +6,7 @@ import DatabaseArticle from "../backend/db-types/DatabaseArticle";
 import DatabaseArticleTag from "../backend/db-types/DatabaseArticleTag";
 import {
     addCachedArticleIdsToTag,
-    queueArticleForTagDiscovery
+    tagDiscoveryQueue
 } from "../backend/redis";
 
 const articles = () => db<DatabaseArticle>(ArtillerTable.articles);
@@ -132,7 +132,7 @@ export async function createArticle(
         article.tags.map(tag => addCachedArticleIdsToTag(tag, [dbArticle.id]))
     );
 
-    await queueArticleForTagDiscovery(dbArticle.id);
+    await tagDiscoveryQueue.queue(dbArticle.id);
 
     return dbArticle.id;
 }
