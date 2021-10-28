@@ -129,7 +129,9 @@ export async function createArticle(
         article.tags.map(tag => addCachedArticleIdsToTag(tag, [dbArticle.id]))
     );
 
-    await tagDiscoveryQueue.queue(dbArticle.id);
+    if (article.tags.length <= 3) {
+        await tagDiscoveryQueue.queue(dbArticle.id);
+    }
 
     return dbArticle.id;
 }
