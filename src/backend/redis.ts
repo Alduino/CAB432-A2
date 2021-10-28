@@ -174,3 +174,51 @@ export async function dequeueArticlesForTagDiscovery(
 
     return items;
 }
+
+function getArticleCountStatKey() {
+    return `stats:article-count`;
+}
+
+export async function getCachedArticleCountStat(): Promise<number | null> {
+    const key = getArticleCountStatKey();
+    const items = await defaultRedis.get(key);
+    if (items) return parseInt(items) || null;
+    return null;
+}
+
+export async function setCachedArticleCountStat(count: number): Promise<void> {
+    const key = getArticleCountStatKey();
+    await defaultRedis.set(key, count, "EX", 30);
+}
+
+function getTagCountStatKey() {
+    return `stats:tag-count`;
+}
+
+export async function getCachedTagCountStat(): Promise<number | null> {
+    const key = getTagCountStatKey();
+    const items = await defaultRedis.get(key);
+    if (items) return parseInt(items) || null;
+    return null;
+}
+
+export async function setCachedTagCountStat(count: number): Promise<void> {
+    const key = getTagCountStatKey();
+    await defaultRedis.set(key, count, "EX", 600);
+}
+
+function getAuthorCountStatKey() {
+    return `stats:author-count`;
+}
+
+export async function getCachedAuthorCountStat(): Promise<number | null> {
+    const key = getAuthorCountStatKey();
+    const items = await defaultRedis.get(key);
+    if (items) return parseInt(items) || null;
+    return null;
+}
+
+export async function setCachedAuthorCountStat(count: number): Promise<void> {
+    const key = getAuthorCountStatKey();
+    await defaultRedis.set(key, count, "EX", 600);
+}

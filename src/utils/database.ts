@@ -4,10 +4,7 @@ import {ArtillerTable} from "../api-types/Schema";
 import db from "../backend/db";
 import DatabaseArticle from "../backend/db-types/DatabaseArticle";
 import DatabaseArticleTag from "../backend/db-types/DatabaseArticleTag";
-import {
-    addCachedArticleIdsToTag,
-    tagDiscoveryQueue
-} from "../backend/redis";
+import {addCachedArticleIdsToTag, tagDiscoveryQueue} from "../backend/redis";
 
 const articles = () => db<DatabaseArticle>(ArtillerTable.articles);
 const articleTags = () => db<DatabaseArticleTag>(ArtillerTable.articleTags);
@@ -135,4 +132,22 @@ export async function createArticle(
     await tagDiscoveryQueue.queue(dbArticle.id);
 
     return dbArticle.id;
+}
+
+export function getArticleCount(): Promise<number> {
+    return articles()
+        .count("id", {as: "count"})
+        .then(res => parseInt(res[0].count as string));
+}
+
+export function getTagCount(): Promise<number> {
+    return articleTags()
+        .countDistinct("name", {as: "count"})
+        .then(res => parseInt(res[0].count as string));
+}
+
+export function getAuthorCount(): Promise<number> {
+    return articles()
+        .countDistinct("author", {as: "count"})
+        .then(res => parseInt(res[0].count as string));
 }

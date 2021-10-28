@@ -36,6 +36,10 @@ export default class RedisUniqueQueue {
             .then(res => res === 1);
     }
 
+    getSize(): Promise<number> {
+        return this.redis.scard(this.indexKey);
+    }
+
     /**
      * Attempts to add an item to the queue. If it already exists, it will not
      * be added again, and `false` will be returned. Otherwise, it will be added
