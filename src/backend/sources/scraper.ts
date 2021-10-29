@@ -36,6 +36,30 @@ const scraperLoaders: ScraperReducer[] = [
         const title = $("meta[name=twitter\\:title]")?.attr("content")?.trim();
         return {...prev, title, _titleSource: "twitter_title"};
     },
+    function openGraphUpdated($, prev) {
+        if (prev.published) return prev;
+        const published = $("meta[property=og\\:updated_time]")
+            ?.attr("content")
+            ?.trim();
+        if (Number.isNaN(Date.parse(published))) return prev;
+        return {...prev, published, _publishedSource: "opengraph_updated"};
+    },
+    function articleModified($, prev) {
+        if (prev.published) return prev;
+        const published = $("meta[property=article\\:modified_time]")
+            ?.attr("content")
+            ?.trim();
+        if (Number.isNaN(Date.parse(published))) return prev;
+        return {...prev, published, _publishedSource: "article_modified"};
+    },
+    function articlePublished($, prev) {
+        if (prev.published) return prev;
+        const published = $("meta[property=article\\:published_time]")
+            ?.attr("content")
+            ?.trim();
+        if (Number.isNaN(Date.parse(published))) return prev;
+        return {...prev, published, _publishedSource: "article_published"};
+    },
     function metaArticleTags($, prev) {
         const tags = $("meta[property=article\\:tag]")
             .toArray()
@@ -125,6 +149,8 @@ const scraperLoaders: ScraperReducer[] = [
             },
             ($, prev) => {
                 if (prev.author) return prev;
+                if (typeof ldData.author === "string")
+                    ldData.author = {name: ldData.author};
                 if (typeof ldData.author?.name !== "string") return prev;
 
                 const author = ldData.author.name.trim();
@@ -132,6 +158,14 @@ const scraperLoaders: ScraperReducer[] = [
                 return {...prev, author, _authorSource: "ld_Data"};
             }
         ]);
+    },
+    function dcTermsCreator($, prev) {
+        if (prev.author) return prev;
+        const author = $("meta[name=dcterms\\.creator]")
+            ?.attr("content")
+            ?.trim();
+        if (!author) return prev;
+        return {...prev, author, _authorSource: "dcterms_creator"};
     },
     function twitterCreator($, prev) {
         if (prev.author) return prev;
@@ -214,6 +248,14 @@ const scraperLoader: Loader<"scraper", URL> = {
                     !data.published ||
                     !data.paragraphs
                 ) {
+                    logger.trace(
+                        {
+                            ...data,
+                            paragraphs: []
+                        },
+                        "Ignored article at %s because it didn't contain enough data",
+                        postId.toString()
+                    );
                     return null;
                 }
 
