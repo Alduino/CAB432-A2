@@ -10,6 +10,7 @@ import {Logo} from "../components/Logo";
 import {SearchBox} from "../components/SearchBox";
 import {statsEndpoint} from "../hooks/api-client";
 import {beginCollectingSearchTerm} from "../utils/collect-search-term";
+import formatNumber from "../utils/formatNumber";
 import noop from "../utils/noop";
 
 const emptyTags = [];
@@ -29,9 +30,16 @@ export default function Index({stats: statsInitial}: IndexProps): ReactElement {
         [replace]
     );
 
-    const {data: stats} = useSwr(statsEndpoint, noop, {
+    const {data: statsUnformatted} = useSwr(statsEndpoint, noop, {
         fallbackData: statsInitial
     });
+
+    const stats = statsUnformatted && Object.fromEntries(
+        Object.entries(statsUnformatted).map(([name, count]) => [
+            name,
+            formatNumber(count)
+        ])
+    );
 
     return (
         <Container title="Artiller">
