@@ -39,6 +39,7 @@ export function getCachedArticleIdsBySearchWord(word: string): Promise<string[]>
 }
 
 export async function addCachedArticleIdsToSearchWord(word: string, ids: string[]) {
+    if (ids.length === 0) return;
     const key = getSearchWordKey(word);
     await defaultRedis.sadd(key, ...ids);
     await defaultRedis.expire(key, 3600);
@@ -83,6 +84,7 @@ export async function addCachedArticleIdsToTag(
     tag: string,
     ids: string[]
 ): Promise<void> {
+    if (ids.length === 0) reutrn;
     const key = getTagKey(tag);
     await defaultRedis.sadd(key, ...ids);
     await defaultRedis.expire(key, 3600);
