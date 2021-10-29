@@ -5,6 +5,7 @@ import {
     AlertIcon,
     AlertTitle,
     Heading,
+    HStack,
     Link,
     Spinner,
     Stack,
@@ -97,7 +98,7 @@ export default function Search() {
     });
 
     const [textboxValue, setTextboxValue] = useState(initialTerm);
-    const [searchTerm, setSearchTerm] = useDebouncedState(textboxValue, 200);
+    const [searchTerm, setSearchTerm] = useDebouncedState(textboxValue, 1500);
     const [searchTags, searchTagsDispatch] = useSearchTags(initialTags);
 
     const searchRequest = useMemo<SearchRequest>(
@@ -116,6 +117,19 @@ export default function Search() {
         set: overrideSearchResults
     } = useFetch(searchEndpoint, searchRequest);
     const staleSearch = useShortStale(searchResults, !searchLoading);
+
+    const [isSearchSlow, setIsSearchSlow] = useState(false);
+
+    useEffect(() => {
+        setIsSearchSlow(false);
+        if (!searchLoading) return;
+
+        const timeout = setTimeout(() => {
+            setIsSearchSlow(true);
+        }, 15000);
+
+        return () => clearTimeout(timeout);
+    }, [setIsSearchSlow, searchLoading, searchTerm]);
 
     useEffect(() => {
         setSearchTerm(textboxValue);
@@ -182,6 +196,15 @@ export default function Search() {
                                     search
                                 </Text>
                             )
+                        ) : isSearchSlow ? (
+                            <HStack>
+                                <Spinner />
+                                <Text opacity={0.8}>
+                                    This search is taking a while. If it
+                                    doesn&rsquo;t finish soon, please refresh
+                                    the page.
+                                </Text>
+                            </HStack>
                         ) : (
                             <Spinner />
                         )}
