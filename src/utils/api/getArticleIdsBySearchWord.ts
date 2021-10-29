@@ -1,3 +1,4 @@
+import {isApiError} from "../../api-types/ApiError";
 import {
     addCachedArticleIdsToSearchWord,
     getCachedArticleIdsBySearchWord,
@@ -22,7 +23,7 @@ export async function queryMoreArticlesBySearchWord(word: string): Promise<strin
         );
 
         return await Promise.all(sourceIds.map(resolveArticleBySource)).then(
-            res => res.filter(Boolean)
+            res => res.filter(el => el && !isApiError(el)) as string[]
         );
     } catch (ex) {
         await unsetQueriedMoreArticlesBySearchWord(word);

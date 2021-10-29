@@ -1,3 +1,4 @@
+import ApiError from "../../../api-types/ApiError";
 import Article from "../../../api-types/Article";
 import {searchers} from "../index";
 import Searcher from "./Searcher";
@@ -33,9 +34,12 @@ export default interface Loader<Id extends string, SourceArticleId> {
     /**
      * Returns an Article object for each of the source article IDs, returned
      * from `getSourceIdsBy*`
+     * @param sourceArticleIds The IDs to load
+     * @param errors An output to specify any errors that caused an article to fail to load
      */
     loadArticlesBySourceArticleIds(
-        sourceArticleIds: SourceArticleId[]
+        sourceArticleIds: SourceArticleId[],
+        errors: Map<SourceArticleId, ApiError>
     ): Promise<
         ReadonlyMap<
             SourceArticleId,

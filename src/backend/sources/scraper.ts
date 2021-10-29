@@ -1,6 +1,7 @@
 import {ok as assert} from "assert";
 import {CheerioAPI, load} from "cheerio";
 import {parse as parseJson5} from "json5";
+import ApiError from "../../api-types/ApiError";
 import Article from "../../api-types/Article";
 import fetchMaybeCachedWebsite from "../../utils/api/fetchMaybeCachedWebsite";
 import createLogger from "../../utils/createLogger";
@@ -221,12 +222,19 @@ function gatherData(
 const scraperLoader: Loader<"scraper", URL> = {
     id: "scraper",
     async loadArticlesBySourceArticleIds(
-        sourceArticleIds: URL[]
+        sourceArticleIds: URL[],
+        errors: Map<URL, ApiError>
     ): Promise<ReadonlyMap<URL, Omit<Article, "id" | "areExtraTagsLoading">>> {
         const articles = await Promise.all(
             sourceArticleIds.map(async postId => {
                 const result = await fetchMaybeCachedWebsite(postId.toString());
-                if (!result) return null;
+
+                if (!result) {
+                    errors.set(postId, {
+                        error: "CONNECTION_ERROR"
+                    });
+                    return null;
+                }
 
                 const $ = load(result);
 
@@ -248,6 +256,17 @@ const scraperLoader: Loader<"scraper", URL> = {
                     !data.published ||
                     !data.paragraphs
                 ) {
+                    errors.set(postId, {
+                        error: "MISSING_FIELD",
+                        field: !data.title
+                            ? "title"
+                            : !data.author
+                            ? "author"
+                            : !data.published
+                            ? "published"
+                            : "paragraphs"
+                    });
+
                     logger.trace(
                         {
                             ...data,

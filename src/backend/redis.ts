@@ -1,5 +1,6 @@
 import {ok as assert} from "assert";
 import IORedis, {Redis} from "ioredis";
+import ApiError, {isApiError} from "../api-types/ApiError";
 import Article from "../api-types/Article";
 import RedisMutex from "../utils/RedisMutex";
 import RedisUniqueQueue from "../utils/RedisUniqueQueue";
@@ -33,12 +34,17 @@ export function getSearchWordKey(word: string) {
     return `word:${word}:usages`;
 }
 
-export function getCachedArticleIdsBySearchWord(word: string): Promise<string[]> {
+export function getCachedArticleIdsBySearchWord(
+    word: string
+): Promise<string[]> {
     const key = getSearchWordKey(word);
     return defaultRedis.smembers(key);
 }
 
-export async function addCachedArticleIdsToSearchWord(word: string, ids: string[]) {
+export async function addCachedArticleIdsToSearchWord(
+    word: string,
+    ids: string[]
+) {
     if (ids.length === 0) return;
     const key = getSearchWordKey(word);
     await defaultRedis.sadd(key, ...ids);
@@ -53,20 +59,26 @@ function getSearchWordCheckKey(word: string) {
  * Checks if articles for this word specifically have been queried in the last
  * hour
  */
-export async function shouldQueryMoreArticlesBySearchWord(word: string): Promise<boolean> {
+export async function shouldQueryMoreArticlesBySearchWord(
+    word: string
+): Promise<boolean> {
     const key = getSearchWordCheckKey(word);
     const valuesKey = getTagKey(word);
-    if (!await defaultRedis.exists(key)) return true;
-    return await defaultRedis.scard(valuesKey) < 10;
+    if (!(await defaultRedis.exists(key))) return true;
+    return (await defaultRedis.scard(valuesKey)) < 10;
 }
 
-export async function setQueriedMoreArticlesBySearchWord(word: string): Promise<void> {
+export async function setQueriedMoreArticlesBySearchWord(
+    word: string
+): Promise<void> {
     const key = getSearchWordCheckKey(word);
     await defaultRedis.set(key, 1);
     await defaultRedis.expire(key, 3600);
 }
 
-export async function unsetQueriedMoreArticlesBySearchWord(word: string): Promise<void> {
+export async function unsetQueriedMoreArticlesBySearchWord(
+    word: string
+): Promise<void> {
     const key = getSearchWordCheckKey(word);
     await defaultRedis.del(key);
 }
@@ -84,7 +96,7 @@ export async function addCachedArticleIdsToTag(
     tag: string,
     ids: string[]
 ): Promise<void> {
-    if (ids.length === 0) reutrn;
+    if (ids.length === 0) return;
     const key = getTagKey(tag);
     await defaultRedis.sadd(key, ...ids);
     await defaultRedis.expire(key, 3600);
@@ -98,11 +110,13 @@ function getTagCheckKey(tag: string) {
  * Checks if articles for this tag specifically have been queried in the last
  * hour
  */
-export async function shouldQueryMoreArticlesByTag(tag: string): Promise<boolean> {
+export async function shouldQueryMoreArticlesByTag(
+    tag: string
+): Promise<boolean> {
     const key = getTagCheckKey(tag);
     const valuesKey = getTagKey(tag);
-    if (!await defaultRedis.exists(key)) return true;
-    return await defaultRedis.scard(valuesKey) < 10;
+    if (!(await defaultRedis.exists(key))) return true;
+    return (await defaultRedis.scard(valuesKey)) < 10;
 }
 
 export async function setQueriedMoreArticlesByTag(tag: string): Promise<void> {
@@ -111,7 +125,9 @@ export async function setQueriedMoreArticlesByTag(tag: string): Promise<void> {
     await defaultRedis.expire(key, 3600);
 }
 
-export async function unsetQueriedMoreArticlesByTag(tag: string): Promise<void> {
+export async function unsetQueriedMoreArticlesByTag(
+    tag: string
+): Promise<void> {
     const key = getTagCheckKey(tag);
     await defaultRedis.del(key);
 }
@@ -151,14 +167,17 @@ export function getCachedArticleIdBySourceId(
 export async function getCachedArticleIdBySourceIdOrLock(
     sourceName: string,
     sourceId: string,
-    inLock: () => Promise<string>
-): Promise<string | null> {
+    inLock: () => Promise<string | ApiError | null>
+): Promise<string | ApiError | null> {
     const key = getSourceIdToArticleIdKey(sourceName, sourceId);
 
     // if it already has a value, we don't need to do anything special
     const hasValue = await defaultRedis.exists(key);
     if (hasValue) {
-        const cachedValue = await getCachedArticleIdBySourceId(sourceName, sourceId);
+        const cachedValue = await getCachedArticleIdBySourceId(
+            sourceName,
+            sourceId
+        );
         if (cachedValue) return cachedValue;
     }
 
@@ -168,23 +187,31 @@ export async function getCachedArticleIdBySourceIdOrLock(
     const isLocked = await mutex.isLocked();
     if (isLocked) {
         await mutex.wait();
-        const cachedValue = await getCachedArticleIdBySourceId(sourceName, sourceId);
+        const cachedValue = await getCachedArticleIdBySourceId(
+            sourceName,
+            sourceId
+        );
         if (cachedValue) return cachedValue;
     }
 
     // it was not locked when we last checked, so lock it and run `inLock`
-    let resultId: string | null;
+    let resultId: string | ApiError | null;
     const successful = await mutex.with(async () => {
         // one final check to see if we have a value now (at this point, nothing else can set the value so this is safe)
         if (await defaultRedis.exists(key)) return;
 
         const value = await inLock();
+        if (value && !isApiError(value)) {
+            await setCachedArticleIdBySourceId(sourceName, sourceId, value);
+        }
 
-        await setCachedArticleIdBySourceId(sourceName, sourceId, value);
         resultId = value;
     });
 
-    assert(successful, `could not lock the mutex for ${sourceName}:${sourceId}`);
+    assert(
+        successful,
+        `could not lock the mutex for ${sourceName}:${sourceId}`
+    );
     return resultId;
 }
 
@@ -198,9 +225,18 @@ export async function setCachedArticleIdBySourceId(
     await defaultRedis.expire(key, 3600);
 }
 
-export const workerWordSearchQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:worker-word-search");
-export const workerTagSearchQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:worker-tag-search");
-export const tagDiscoveryQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:tag-discovery");
+export const workerWordSearchQueue = new RedisUniqueQueue(
+    defaultRedis,
+    "worker:queue:worker-word-search"
+);
+export const workerTagSearchQueue = new RedisUniqueQueue(
+    defaultRedis,
+    "worker:queue:worker-tag-search"
+);
+export const tagDiscoveryQueue = new RedisUniqueQueue(
+    defaultRedis,
+    "worker:queue:tag-discovery"
+);
 
 /**
  * Waits until there `count` are items in the tag discovery queue, and returns

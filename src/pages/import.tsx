@@ -4,7 +4,7 @@ import {GetServerSideProps} from "next";
 import NextLink from "next/link";
 import {useRouter} from "next/router";
 import {ReactElement, useEffect, useMemo} from "react";
-import {isApiError} from "../api-types/ApiError";
+import {isApiError, stringifyApiError} from "../api-types/ApiError";
 import ImportRequest from "../api-types/ImportRequest";
 import {Container} from "../components/Container";
 import {Logo} from "../components/Logo";
@@ -75,7 +75,7 @@ export default function Import({url}: ImportProps): ReactElement {
                 )}
                 <Box flexGrow={1} />
                 {isApiError(result) && (
-                    <Code fontSize="xs">ERR_{result.error}</Code>
+                    <Code fontSize="xs">{stringifyApiError(result)}</Code>
                 )}
             </VStack>
         </Container>

@@ -1,7 +1,8 @@
 import {NextApiRequest, NextApiResponse} from "next";
-import ApiError from "../../api-types/ApiError";
+import ApiError, {isApiError} from "../../api-types/ApiError";
 import ImportResponse from "../../api-types/ImportResponse";
 import {resolveArticleBySource} from "../../utils/api/resolveArticleBySource";
+import article from "./article";
 
 export default async function handleImport(req: NextApiRequest, res: NextApiResponse) {
     const urlParam = req.query.url;
@@ -39,14 +40,16 @@ export default async function handleImport(req: NextApiRequest, res: NextApiResp
         sourceArticleId: url
     });
 
-    if (articleId) {
+    if (isApiError(articleId)) {
+        res.json(articleId);
+    } else if (articleId) {
         res.json({
             success: true,
             id: articleId
         } as ImportResponse);
     } else {
         res.json({
-            error: "IMPORT_ERROR"
+            error: "INTERNAL_ERROR"
         } as ApiError);
     }
 }
