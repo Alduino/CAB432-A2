@@ -111,9 +111,11 @@ export default function Article({article}: ArticleProps) {
                         spacing={4}
                         flexShrink={0}
                     >
-                        {article.paragraphs.map((p, i) => (
+                        {article.paragraphs.length > 0 ? article.paragraphs.map((p, i) => (
                             <Text key={i}>{p}</Text>
-                        ))}
+                        )) : (
+                            <Text opacity={.8}>Sorry, this article doesn&rsquo;t have any text.</Text>
+                        )}
                     </Stack>
                 </Stack>
             </MainStack>
