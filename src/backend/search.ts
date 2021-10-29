@@ -111,13 +111,13 @@ async function matchArticlesBySearch(search: SearchRequest) {
     await Promise.all(
         Array.from(
             new Set(matchedArticles.flatMap(article => article.tags))
-        ).map(tag => workerTagSearchQueue.queue(tag))
+        ).slice(0, 20).map(tag => workerTagSearchQueue.queue(tag))
     );
 
     await Promise.all(
         Array.from(
             new Set(matchedArticles.flatMap(article => getMatchableWords(article.title)))
-        ).map(word => workerWordSearchQueue.queue(word))
+        ).slice(0, 20).map(word => workerWordSearchQueue.queue(word))
     );
 
     return {
