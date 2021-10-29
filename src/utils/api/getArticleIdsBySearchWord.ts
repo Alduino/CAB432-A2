@@ -1,9 +1,9 @@
-import {ok as assert} from "assert";
 import {
-        getCachedArticleIdsBySearchWord,
-        setQueriedMoreArticlesBySearchWord,
-        shouldQueryMoreArticlesBySearchWord,
-        unsetQueriedMoreArticlesBySearchWord
+    addCachedArticleIdsToSearchWord,
+    getCachedArticleIdsBySearchWord,
+    setQueriedMoreArticlesBySearchWord,
+    shouldQueryMoreArticlesBySearchWord,
+    unsetQueriedMoreArticlesBySearchWord
 } from "../../backend/redis";
 import {getArticleIdsByMatchingWord} from "../database";
 import {querySearchers} from "./querySearchers";
@@ -46,8 +46,13 @@ export default async function getArticleIdsBySearchWord(word: string) {
 
     const calculatedArticleIds = await queryMoreArticlesBySearchWord(word);
 
+    await addCachedArticleIdsToSearchWord(word, [
+        ...calculatedArticleIds,
+        ...databaseArticleIds
+    ]);
+
     return new Set([
-        ...calculatedArticleIds.flat(),
+        ...calculatedArticleIds,
         ...cachedArticleIds,
         ...databaseArticleIds
     ]);
