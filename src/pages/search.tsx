@@ -99,7 +99,7 @@ export default function Search() {
     });
 
     const [textboxValue, setTextboxValue] = useState(initialTerm);
-    const [searchTerm, setSearchTerm] = useDebouncedState(textboxValue, 1500);
+    const [searchTerm, setSearchTerm] = useDebouncedState(textboxValue, 500);
     const [searchTags, searchTagsDispatch] = useSearchTags(initialTags);
 
     const searchRequest = useMemo<SearchRequest>(
