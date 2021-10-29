@@ -1,10 +1,14 @@
+import {load} from "cheerio";
 import fetch, {Headers} from "node-fetch";
 import Article from "../../api-types/Article";
+import fetchMaybeCachedWebsite from "../../utils/api/fetchMaybeCachedWebsite";
 import createLogger from "../../utils/createLogger";
 import Loader, {RealSearcherContext} from "./types/Loader";
 import Searcher from "./types/Searcher";
 
 const logger = createLogger("source:medium");
+
+const articleUrlRegex = /^medium:\/\/p\/(?<id>[0-9a-f]+)$/;
 
 async function fetchGraphQl<T = unknown>(
     query: string,
@@ -30,7 +34,10 @@ async function fetchGraphQl<T = unknown>(
         const res = JSON.parse(text);
         return res.data;
     } catch (err) {
-        logger.error("The response for the following error is:", text.substring(0, 100));
+        logger.error(
+            "The response for the following error is:",
+            text.substring(0, 100)
+        );
         throw err;
     }
 }
@@ -168,14 +175,42 @@ export const mediumLoader: Loader<"medium", string> = {
     deserialiseSourceArticleId(sourceArticleId: string): string {
         return sourceArticleId;
     },
-    resolveLoaderArticleId(ctx: RealSearcherContext): string | null {
+    async resolveLoaderArticleId(
+        ctx: RealSearcherContext
+    ): Promise<string | null> {
         const hostRegex = /\.?medium\.com$/;
         const idRegex = /-(?<id>[0-9a-f]+)$/;
 
         if (ctx.id === "medium") {
             return ctx.sourceArticleId;
-        } else if (ctx.sourceArticleId instanceof URL && hostRegex.test(ctx.sourceArticleId.host)) {
-            return idRegex.exec(ctx.sourceArticleId.pathname)?.groups.id ?? null;
+        } else if (ctx.sourceArticleId instanceof URL) {
+            if (hostRegex.test(ctx.sourceArticleId.host)) {
+                return (
+                    idRegex.exec(ctx.sourceArticleId.pathname)?.groups.id ??
+                    null
+                );
+            } else {
+                const result = await fetchMaybeCachedWebsite(
+                    ctx.sourceArticleId.toString()
+                );
+                if (!result) return null;
+
+                const $ = load(result);
+                const siteName = $("meta[property=og\\:site_name]");
+                if (!siteName) return null;
+                if (siteName.attr("content")?.toUpperCase() !== "MEDIUM")
+                    return null;
+
+                const articleId = $(
+                    "meta[property=al\\:android\\:url], meta[property=al\\:ios\\:url], meta[name=twitter\\:app\\:url\\:iphone]"
+                );
+                if (!articleId) return null;
+                const articleIdValue = articleId.attr("content");
+                if (!articleIdValue) return null;
+
+                const articleIdMatch = articleUrlRegex.exec(articleIdValue);
+                return articleIdMatch?.groups?.id ?? null;
+            }
         } else {
             return null;
         }

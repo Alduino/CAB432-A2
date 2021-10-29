@@ -263,3 +263,18 @@ export async function setCachedAuthorCountStat(count: number): Promise<void> {
     const key = getAuthorCountStatKey();
     await defaultRedis.set(key, count, "EX", 600);
 }
+
+function getWebsiteCacheKey(url: string) {
+    return `website:${url}`;
+}
+
+export function getCachedWebsiteContent(url: string) {
+    const key = getWebsiteCacheKey(url);
+    return defaultRedis.get(key);
+}
+
+export async function setCachedWebsiteContent(url: string, content: string) {
+    const key = getWebsiteCacheKey(url);
+    await defaultRedis.set(key, content);
+    await defaultRedis.expire(key, 10);
+}

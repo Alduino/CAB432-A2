@@ -2,6 +2,7 @@ import {ok as assert} from "assert";
 import {CheerioAPI, load} from "cheerio";
 import fetch from "node-fetch";
 import Article from "../../api-types/Article";
+import fetchMaybeCachedWebsite from "../../utils/api/fetchMaybeCachedWebsite";
 import createLogger from "../../utils/createLogger";
 import normaliseTag from "../../utils/normaliseTag";
 import Loader, {RealSearcherContext} from "./types/Loader";
@@ -185,20 +186,8 @@ const scraperLoader: Loader<"scraper", URL> = {
     ): Promise<ReadonlyMap<URL, Omit<Article, "id" | "areExtraTagsLoading">>> {
         const articles = await Promise.all(
             sourceArticleIds.map(async postId => {
-                let result: Buffer;
-
-                try {
-                    result = await fetch(postId.toString()).then(res =>
-                        res.buffer()
-                    );
-                } catch (err) {
-                    logger.warn(
-                        err,
-                        "Failed to download %s",
-                        postId.toString()
-                    );
-                    return null;
-                }
+                const result = await fetchMaybeCachedWebsite(postId.toString());
+                if (!result) return null;
 
                 const $ = load(result);
 
