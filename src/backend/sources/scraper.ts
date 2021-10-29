@@ -1,5 +1,6 @@
 import {ok as assert} from "assert";
 import {CheerioAPI, load} from "cheerio";
+import {parse as parseJson5} from "json5";
 import Article from "../../api-types/Article";
 import fetchMaybeCachedWebsite from "../../utils/api/fetchMaybeCachedWebsite";
 import createLogger from "../../utils/createLogger";
@@ -71,7 +72,7 @@ const scraperLoaders: ScraperReducer[] = [
 
         let ldData: Record<string, any>;
         try {
-            ldData = JSON.parse(ldDataTxt);
+            ldData = parseJson5(ldDataTxt);
         } catch {
             logger.warn("Failed to parse JSON from LD Data (%s)", ldDataTxt);
             return prev;

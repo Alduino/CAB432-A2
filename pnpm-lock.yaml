@@ -27,6 +27,7 @@ specifiers:
   eslint-plugin-react-hooks: ^4.2.0
   framer-motion: ^4.0.3
   ioredis: ^4.28.0
+  json5: ^2.2.0
   knex: ^0.95.11
   next: ^11.1.2
   node-fetch: ^3.0.0
@@ -56,6 +57,7 @@ dependencies:
   dotenv: 10.0.0
   framer-motion: 4.1.17_react-dom@17.0.2+react@17.0.2
   ioredis: 4.28.0
+  json5: 2.2.0
   knex: 0.95.11_pg@8.7.1
   next: 11.1.2_c8cdd86752aa86fb2b6e32ae91115ebe
   node-fetch: 3.0.0
@@ -3702,6 +3704,14 @@ packages:
     hasBin: true
     dependencies:
       minimist: 1.2.5
+
+  /json5/2.2.0:
+    resolution: {integrity: sha512-f+8cldu7X/y7RAJurMEJmdoKXGB/X550w2Nr3tTbezL6RwEE/iMcm+tZnXeoZtKuOq6ft8+CqzEkrIgx1fPoQA==}
+    engines: {node: '>=6'}
+    hasBin: true
+    dependencies:
+      minimist: 1.2.5
+    dev: false
 
   /jsx-ast-utils/3.2.1:
     resolution: {integrity: sha512-uP5vu8xfy2F9A6LGC22KO7e2/vGTS1MhP+18f++ZNlf0Ohaxbc9nIEwHAsejlJKyzfZzU5UIhe5ItYkitcZnZA==}
