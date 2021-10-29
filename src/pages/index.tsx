@@ -24,8 +24,13 @@ export default function Index({stats: statsInitial}: IndexProps): ReactElement {
 
     const handleTermChanged = useCallback(
         term => {
-            beginCollectingSearchTerm(term);
-            replace(`/search?term=${encodeURIComponent(term)}`, "/search");
+            try {
+                const parsedUrl = new URL(term);
+                replace(`/import?url=${encodeURIComponent(parsedUrl.toString())}`);
+            } catch {
+                beginCollectingSearchTerm(term);
+                replace(`/search?term=${encodeURIComponent(term)}`, "/search");
+            }
         },
         [replace]
     );
@@ -55,6 +60,7 @@ export default function Index({stats: statsInitial}: IndexProps): ReactElement {
                         term=""
                         tags={emptyTags}
                         onTermChanged={handleTermChanged}
+                        placeholder="Search or paste a URL"
                     />
                 </VStack>
                 <Box flexGrow={1} />

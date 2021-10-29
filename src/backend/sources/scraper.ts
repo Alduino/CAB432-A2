@@ -5,6 +5,7 @@ import fetchMaybeCachedWebsite from "../../utils/api/fetchMaybeCachedWebsite";
 import createLogger from "../../utils/createLogger";
 import normaliseTag from "../../utils/normaliseTag";
 import Loader, {RealSearcherContext} from "./types/Loader";
+import Searcher from "./types/Searcher";
 
 const logger = createLogger("source:scraper");
 
@@ -236,3 +237,10 @@ const scraperLoader: Loader<"scraper", URL> = {
 };
 
 export default scraperLoader;
+
+/**
+ * Doesn't actually do anything, mainly used for custom searchers
+ */
+export const scraperSearcher: Searcher<"scraper", URL> = {
+    id: "scraper"
+};

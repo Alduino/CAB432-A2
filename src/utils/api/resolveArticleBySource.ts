@@ -64,6 +64,7 @@ async function loadArticleBySourceId(
 /**
  * Resolves an article by a source ID, using the first loader that can load that
  * source type
+ * @returns The ID of the article, or null if no article could be resolved
  */
 export async function resolveArticleBySource(ctx: RealSearcherContext) {
     for (const loader of Object.values(loaders)) {

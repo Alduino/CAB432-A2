@@ -1,10 +1,11 @@
 import {hnSearcher} from "./hacker-news";
 import {mediumLoader, mediumSearcher} from "./medium";
-import scraperLoader from "./scraper";
+import scraperLoader, {scraperSearcher} from "./scraper";
 
 export const searchers = {
     medium: mediumSearcher,
-    hn: hnSearcher
+    hn: hnSearcher,
+    scraper: scraperSearcher
 };
 
 export const loaders = {

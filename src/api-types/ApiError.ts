@@ -1,5 +1,5 @@
 interface BasicError {
-    error: "NOT_FOUND" | "INTERNAL_ERROR";
+    error: "NOT_FOUND" | "INTERNAL_ERROR" | "IMPORT_ERROR";
 }
 
 interface ParamError {

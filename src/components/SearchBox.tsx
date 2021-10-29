@@ -85,6 +85,7 @@ interface SearchBoxProps extends StackProps {
     term: string;
     tags: SearchTag[];
     tagsDispatch?: Dispatch<SearchTagsActions>;
+    placeholder?: string;
 
     onTermChanged?(term: string): void;
 
@@ -97,6 +98,7 @@ export function SearchBox({
     onTermChanged,
     tagsDispatch,
     onManualTrigger,
+    placeholder,
     ...props
 }: SearchBoxProps) {
     const mainInput = useRef<HTMLInputElement>();
@@ -143,7 +145,7 @@ export function SearchBox({
 
             if (ev.key === "Backspace" && term.length === 0) {
                 // Delete the last tag (similar to backspace with normal text)
-                tagsDispatch({type: "pop"});
+                tagsDispatch?.({type: "pop"});
                 ev.preventDefault();
             } else if (
                 (ev.key === ":" || ev.key === "Enter") &&
@@ -161,7 +163,7 @@ export function SearchBox({
                 !term.trim().includes(" ")
             ) {
                 // Add a normal tag
-                tagsDispatch({
+                tagsDispatch?.({
                     type: "add",
                     tag: {kind: "normal", value: termNormalised}
                 });
@@ -199,7 +201,7 @@ export function SearchBox({
     ]);
 
     const commitTagEdit = useCallback(() => {
-        tagsDispatch({
+        tagsDispatch?.({
             type: "add",
             tag: {
                 kind: editingTagKind,
@@ -311,7 +313,7 @@ export function SearchBox({
                     flexGrow={1}
                     flexShrink={0}
                     type="search"
-                    placeholder={tags.length ? "Search" : "Search or paste a URL"}
+                    placeholder={placeholder ?? "Search the internet"}
                     value={term}
                     onKeyDown={handleKeydown}
                     onChange={ev => onTermChanged?.(ev.target.value)}
