@@ -33,6 +33,7 @@ import {searchEndpoint} from "../hooks/api-client";
 import useDebouncedState from "../hooks/useDebouncedState";
 import {useShortStale} from "../hooks/useShortStale";
 import {stopCollectingSearchTerm} from "../utils/collect-search-term";
+import normaliseTag from "../utils/normaliseTag";
 import {parseTag} from "../utils/parseTag";
 
 interface SearchResultProps {
@@ -104,7 +105,15 @@ export default function Search() {
     const searchRequest = useMemo<SearchRequest>(
         () => ({
             term: searchTerm,
-            tags: searchTags
+            tags:
+                searchTags.length === 0 && !/[\s,]/.test(searchTerm)
+                    ? [
+                          {
+                              kind: "normal",
+                              value: normaliseTag(searchTerm)
+                          }
+                      ]
+                    : searchTags
         }),
         [searchTerm, searchTags]
     );
