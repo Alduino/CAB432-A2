@@ -1,5 +1,5 @@
 interface BasicError {
-    error: "NOT_FOUND";
+    error: "NOT_FOUND" | "INTERNAL_ERROR";
 }
 
 interface ParamError {
@@ -11,5 +11,6 @@ type ApiError = BasicError | ParamError;
 export default ApiError;
 
 export function isApiError(res: unknown): res is ApiError {
+    if (typeof res !== "object") return false;
     return typeof (res as {error: unknown}).error === "string";
 }

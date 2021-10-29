@@ -1,10 +1,10 @@
 import {
     createRedis, defaultRedis,
-    shouldQueryMoreArticles,
+    shouldQueryMoreArticlesByTag,
     workerTagSearchQueue
 } from "../backend/redis";
 import RedisRateLimiter from "../utils/RedisRateLimiter";
-import {queryMoreArticles} from "../utils/api/getArticleIdsByTag";
+import {queryMoreArticlesByTag} from "../utils/api/getArticleIdsByTag";
 import createLogger from "../utils/createLogger";
 
 const logger = createLogger("worker:tag-search");
@@ -16,13 +16,13 @@ const rateLimiter = new RedisRateLimiter(
 );
 
 async function doTagSearch(tag: string) {
-    if (!(await shouldQueryMoreArticles(tag))) return;
+    if (!(await shouldQueryMoreArticlesByTag(tag))) return;
 
     logger.info("Querying for articles with the tag %s", tag);
 
     try {
         const success = await rateLimiter.trigger(tag);
-        if (success) await queryMoreArticles(tag);
+        if (success) await queryMoreArticlesByTag(tag);
         else await workerTagSearchQueue.queue(tag);
     } catch (err) {
         logger.error(err, "Failed to query articles for tag %s", tag);

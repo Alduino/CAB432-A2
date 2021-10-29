@@ -28,6 +28,7 @@ import {
 import {SearchTag} from "../api-types/SearchTag";
 import useListControls from "../hooks/useListControls";
 import useTextWidth from "../hooks/useTextWidth";
+import normaliseTag from "../utils/normaliseTag";
 
 type MapActionObjectToActions<T> = {
     [Key in keyof T]: T[Key] extends void ? {type: Key} : {type: Key} & T[Key];
@@ -138,10 +139,7 @@ export function SearchBox({
 
     const handleKeydown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
         ev => {
-            const termNormalised = term
-                .trim()
-                .toLowerCase()
-                .replace(/[^a-z0-9]/g, "-");
+            const termNormalised = normaliseTag(term);
 
             if (ev.key === "Backspace" && term.length === 0) {
                 // Delete the last tag (similar to backspace with normal text)
@@ -160,7 +158,7 @@ export function SearchBox({
                     tag => tag.kind === "normal" && tag.value === termNormalised
                 ) &&
                 (ev.key === "," || ev.key === "Enter") &&
-                !termNormalised.includes(" ")
+                !term.trim().includes(" ")
             ) {
                 // Add a normal tag
                 tagsDispatch({

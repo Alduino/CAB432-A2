@@ -29,6 +29,47 @@ export async function setCachedArticleById(article: Article): Promise<void> {
     await defaultRedis.set(key, JSON.stringify(article), "EX", 3600, "NX");
 }
 
+export function getSearchWordKey(word: string) {
+    return `word:${word}:usages`;
+}
+
+export function getCachedArticleIdsBySearchWord(word: string): Promise<string[]> {
+    const key = getSearchWordKey(word);
+    return defaultRedis.smembers(key);
+}
+
+export async function addCachedArticleIdsToSearchWord(word: string, ids: string[]) {
+    const key = getSearchWordKey(word);
+    await defaultRedis.sadd(key, ...ids);
+    await defaultRedis.expire(key, 3600);
+}
+
+function getSearchWordCheckKey(word: string) {
+    return `word:${word}:check`;
+}
+
+/**
+ * Checks if articles for this word specifically have been queried in the last
+ * hour
+ */
+export async function shouldQueryMoreArticlesBySearchWord(word: string): Promise<boolean> {
+    const key = getSearchWordCheckKey(word);
+    const valuesKey = getTagKey(word);
+    if (!await defaultRedis.exists(key)) return true;
+    return await defaultRedis.scard(valuesKey) < 10;
+}
+
+export async function setQueriedMoreArticlesBySearchWord(word: string): Promise<void> {
+    const key = getSearchWordCheckKey(word);
+    await defaultRedis.set(key, 1);
+    await defaultRedis.expire(key, 3600);
+}
+
+export async function unsetQueriedMoreArticlesBySearchWord(word: string): Promise<void> {
+    const key = getSearchWordCheckKey(word);
+    await defaultRedis.del(key);
+}
+
 function getTagKey(tag: string) {
     return `tag:${tag}:usages`;
 }
@@ -55,20 +96,20 @@ function getTagCheckKey(tag: string) {
  * Checks if articles for this tag specifically have been queried in the last
  * hour
  */
-export async function shouldQueryMoreArticles(tag: string): Promise<boolean> {
+export async function shouldQueryMoreArticlesByTag(tag: string): Promise<boolean> {
     const key = getTagCheckKey(tag);
     const valuesKey = getTagKey(tag);
     if (!await defaultRedis.exists(key)) return true;
     return await defaultRedis.scard(valuesKey) < 10;
 }
 
-export async function setQueriedMoreArticles(tag: string): Promise<void> {
+export async function setQueriedMoreArticlesByTag(tag: string): Promise<void> {
     const key = getTagCheckKey(tag);
     await defaultRedis.set(key, 1);
     await defaultRedis.expire(key, 3600);
 }
 
-export async function unsetQueriedMoreArticles(tag: string): Promise<void> {
+export async function unsetQueriedMoreArticlesByTag(tag: string): Promise<void> {
     const key = getTagCheckKey(tag);
     await defaultRedis.del(key);
 }
@@ -109,7 +150,7 @@ export async function getCachedArticleIdBySourceIdOrLock(
     sourceName: string,
     sourceId: string,
     inLock: () => Promise<string>
-): Promise<string> {
+): Promise<string | null> {
     const key = getSourceIdToArticleIdKey(sourceName, sourceId);
 
     // if it already has a value, we don't need to do anything special
@@ -130,18 +171,18 @@ export async function getCachedArticleIdBySourceIdOrLock(
     }
 
     // it was not locked when we last checked, so lock it and run `inLock`
-    let resultId;
+    let resultId: string | null;
     const successful = await mutex.with(async () => {
         // one final check to see if we have a value now (at this point, nothing else can set the value so this is safe)
         if (await defaultRedis.exists(key)) return;
 
         const value = await inLock();
+
         await setCachedArticleIdBySourceId(sourceName, sourceId, value);
         resultId = value;
     });
 
     assert(successful, `could not lock the mutex for ${sourceName}:${sourceId}`);
-    assert(resultId, `result id is not defined after import for ${sourceName}:${sourceId}`);
     return resultId;
 }
 

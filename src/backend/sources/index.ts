@@ -1,16 +1,13 @@
-import Source from "./Source";
-import mediumSource from "./medium";
+import {hnSearcher} from "./hacker-news";
+import {mediumLoader, mediumSearcher} from "./medium";
+import scraperLoader from "./scraper";
 
-type SourceMapping<Options extends Source<string, unknown>> = {
-    [Name in Options["id"]]: Options & {id: Name};
+export const searchers = {
+    medium: mediumSearcher,
+    hn: hnSearcher
 };
 
-function buildSources<Options extends Source<string, unknown>[]>(
-    ...options: Options
-) {
-    return Object.fromEntries(
-        options.map(opt => [opt.id, opt])
-    ) as SourceMapping<Options[number]>;
-}
-
-export const sources = buildSources(mediumSource);
+export const loaders = {
+    medium: mediumLoader,
+    scraper: scraperLoader
+};

@@ -1,6 +1,10 @@
 import fetch, {Headers} from "node-fetch";
 import Article from "../../api-types/Article";
-import Source from "./Source";
+import createLogger from "../../utils/createLogger";
+import Loader, {RealSearcherContext} from "./types/Loader";
+import Searcher from "./types/Searcher";
+
+const logger = createLogger("source:medium");
 
 async function fetchGraphQl<T = unknown>(
     query: string,
@@ -10,6 +14,7 @@ async function fetchGraphQl<T = unknown>(
     headers.set("Content-Type", "application/json");
     headers.set("User-Agent", "ArtillerBackend/0.1.0");
 
+    logger.trace("Sending graphql request to Medium");
     const res = await fetch("https://medium.com/_/graphql", {
         method: "post",
         headers: headers,
@@ -25,7 +30,7 @@ async function fetchGraphQl<T = unknown>(
         const res = JSON.parse(text);
         return res.data;
     } catch (err) {
-        console.error("The response for the following error is:", text);
+        logger.error("The response for the following error is:", text.substring(0, 100));
         throw err;
     }
 }
@@ -64,7 +69,7 @@ interface ArticleBySourceIdResult {
     };
 }
 
-const mediumSource: Source<"medium", string> = {
+export const mediumSearcher: Searcher<"medium", string> = {
     id: "medium",
     async getSourceIdsByTag(tag: string): Promise<string[]> {
         // language=graphql
@@ -90,10 +95,16 @@ const mediumSource: Source<"medium", string> = {
                 })
             ).tagFeed?.items.map(item => item.post.id) ?? []
         );
-    },
+    }
+};
+
+export const mediumLoader: Loader<"medium", string> = {
+    id: "medium",
     async loadArticlesBySourceArticleIds(
         sourceArticleIds: string[]
-    ): Promise<ReadonlyMap<string, Omit<Article, "id" | "areExtraTagsLoading">>> {
+    ): Promise<
+        ReadonlyMap<string, Omit<Article, "id" | "areExtraTagsLoading">>
+    > {
         // language=graphql
         const query = `
             query PostViewerEdgeContent($postId: ID!) {
@@ -150,7 +161,23 @@ const mediumSource: Source<"medium", string> = {
                 })
             )
         );
+    },
+    serialiseSourceArticleId(sourceArticleId: string): string {
+        return sourceArticleId;
+    },
+    deserialiseSourceArticleId(sourceArticleId: string): string {
+        return sourceArticleId;
+    },
+    resolveLoaderArticleId(ctx: RealSearcherContext): string | null {
+        const hostRegex = /\.?medium\.com$/;
+        const idRegex = /-(?<id>[0-9a-f]+)$/;
+
+        if (ctx.id === "medium") {
+            return ctx.sourceArticleId;
+        } else if (ctx.sourceArticleId instanceof URL && hostRegex.test(ctx.sourceArticleId.host)) {
+            return idRegex.exec(ctx.sourceArticleId.pathname)?.groups.id ?? null;
+        } else {
+            return null;
+        }
     }
 };
-
-export default mediumSource;

@@ -19,6 +19,7 @@ import NextLink from "next/link";
 import {useRouter} from "next/router";
 import {useEffect, useMemo, useState} from "react";
 import useConstant from "use-constant";
+import {isApiError} from "../api-types/ApiError";
 import SearchRequest from "../api-types/SearchRequest";
 import {SearchResponseItem} from "../api-types/SearchResponse";
 import {SearchTag} from "../api-types/SearchTag";
@@ -133,7 +134,7 @@ export default function Search() {
     }, [searchRequest, searchTerm, searchTags]);
 
     const title =
-        staleSearch?.results.length > 0
+        !isApiError(staleSearch) && staleSearch?.results?.length > 0
             ? `${staleSearch.count} results`
             : "Search";
 
@@ -158,7 +159,16 @@ export default function Search() {
                         spacing={4}
                         divider={useStackDivider && <StackDivider />}
                     >
-                        {staleSearch ? (
+                        {searchError || isApiError(staleSearch) ? (
+                            <Alert status="error">
+                                <AlertIcon />
+                                <AlertTitle>Oops!</AlertTitle>
+                                <AlertDescription>
+                                    For some reason, your search failed.
+                                    We&rsquo;ve already been notified.
+                                </AlertDescription>
+                            </Alert>
+                        ) : staleSearch?.results ? (
                             staleSearch.results.length > 0 ? (
                                 staleSearch.results.map(result => (
                                     <SearchResult
@@ -172,15 +182,6 @@ export default function Search() {
                                     search
                                 </Text>
                             )
-                        ) : searchError ? (
-                            <Alert status="error">
-                                <AlertIcon />
-                                <AlertTitle>Oops!</AlertTitle>
-                                <AlertDescription>
-                                    For some reason, your search failed.
-                                    We&rsquo;ve already been notified.
-                                </AlertDescription>
-                            </Alert>
                         ) : (
                             <Spinner />
                         )}

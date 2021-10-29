@@ -79,6 +79,11 @@ export interface SearchResponseItem {
     areExtraTagsLoading: boolean;
 
     /**
+     * The number of matches that this response item had with the search query
+     */
+    matchCount: number;
+
+    /**
      * The tags that this item has, and whether or not they matched
      */
     tags: SearchResponseTag[];

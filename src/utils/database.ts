@@ -31,12 +31,15 @@ export async function getArticleById(id: string): Promise<Article | null> {
     };
 }
 
-export function getArticleIdsByMatchingWord(
+export async function getArticleIdsByMatchingWord(
     word: string
-): Promise<Pick<DatabaseArticle, "id" | "title">[]> {
+): Promise<Set<string>> {
     // don't allow the user to break it
     word = word.replace(/%/g, "");
-    return articles().select("id", "title").where("title", "like", `%${word}%`);
+    const rows = await articles()
+        .select("id")
+        .where("title", "like", `%${word}%`);
+    return new Set(rows.map(row => row.id));
 }
 
 export async function getArticleIdsByTag(tag: string): Promise<Set<string>> {
@@ -47,17 +50,15 @@ export async function getArticleIdsByTag(tag: string): Promise<Set<string>> {
 export async function getArticleIdsByAuthors(
     authors: string[]
 ): Promise<Set<string>> {
-    const columns = await articles().select("id").whereIn("author", authors);
-    return new Set(columns.map(col => col.id));
+    const rows = await articles().select("id").whereIn("author", authors);
+    return new Set(rows.map(row => row.id));
 }
 
 export async function getArticleIdsByDomains(
     domains: string[]
 ): Promise<Set<string>> {
-    const columns = await articles()
-        .select("id")
-        .whereIn("link_domain", domains);
-    return new Set(columns.map(col => col.id));
+    const rows = await articles().select("id").whereIn("link_domain", domains);
+    return new Set(rows.map(row => row.id));
 }
 
 export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
@@ -136,7 +137,8 @@ export async function createArticle(
     }));
 
     await articles().insert(dbArticle);
-    await articleTags().insert(dbTags);
+
+    if (dbTags.length > 0) await articleTags().insert(dbTags);
 
     await Promise.all(
         article.tags.map(tag => addCachedArticleIdsToTag(tag, [dbArticle.id]))
