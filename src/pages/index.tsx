@@ -34,12 +34,14 @@ export default function Index({stats: statsInitial}: IndexProps): ReactElement {
         fallbackData: statsInitial
     });
 
-    const stats = statsUnformatted && Object.fromEntries(
-        Object.entries(statsUnformatted).map(([name, count]) => [
-            name,
-            formatNumber(count)
-        ])
-    );
+    const stats =
+        statsUnformatted &&
+        Object.fromEntries(
+            Object.entries(statsUnformatted).map(([name, count]) => [
+                name,
+                formatNumber(count)
+            ])
+        );
 
     return (
         <Container title="Artiller">
@@ -62,7 +64,8 @@ export default function Index({stats: statsInitial}: IndexProps): ReactElement {
                             So far, we&rsquo;ve indexed more than {stats.tags}{" "}
                             tags across {stats.articles} articles by{" "}
                             {stats.authors} creators, with{" "}
-                            {stats.tagSearchQueueSize} more tags, and tags for{" "}
+                            {stats.tagSearchQueueSize} more tags,{" "}
+                            {stats.wordSearchQueueSize} more words, and tags for{" "}
                             {stats.tagDiscoveryQueueSize} articles, coming soon.
                         </Text>
                     </VStack>

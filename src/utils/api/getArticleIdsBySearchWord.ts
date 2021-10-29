@@ -13,7 +13,7 @@ import {resolveArticleBySource} from "./resolveArticleBySource";
  * Returns articles that match the search word that is specified, querying them
  * from the various sources if needed (and adding to the cache and database)
  */
-async function queryMoreArticlesBySearchWord(word: string): Promise<string[]> {
+export async function queryMoreArticlesBySearchWord(word: string): Promise<string[]> {
     await setQueriedMoreArticlesBySearchWord(word);
 
     try {

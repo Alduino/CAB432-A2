@@ -196,6 +196,7 @@ export async function setCachedArticleIdBySourceId(
     await defaultRedis.expire(key, 3600);
 }
 
+export const workerWordSearchQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:worker-word-search");
 export const workerTagSearchQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:worker-tag-search");
 export const tagDiscoveryQueue = new RedisUniqueQueue(defaultRedis, "worker:queue:tag-discovery");
 

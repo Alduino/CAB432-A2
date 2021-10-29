@@ -4,7 +4,7 @@ import {
     getMaybeCachedAuthorCountStat,
     getMaybeCachedTagCountStat
 } from "../utils/api/maybe-cached-stats";
-import {tagDiscoveryQueue, workerTagSearchQueue} from "./redis";
+import {tagDiscoveryQueue, workerTagSearchQueue, workerWordSearchQueue} from "./redis";
 
 export default async function getStats(): Promise<StatsResponse> {
     return {
@@ -12,6 +12,7 @@ export default async function getStats(): Promise<StatsResponse> {
         tags: await getMaybeCachedTagCountStat(),
         authors: await getMaybeCachedAuthorCountStat(),
         tagSearchQueueSize: await workerTagSearchQueue.getSize(),
+        wordSearchQueueSize: await workerWordSearchQueue.getSize(),
         tagDiscoveryQueueSize: await tagDiscoveryQueue.getSize()
     };
 }

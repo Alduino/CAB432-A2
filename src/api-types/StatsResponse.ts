@@ -20,6 +20,11 @@ export default interface StatsResponse {
     tagSearchQueueSize: number;
 
     /**
+     * The seize of the word search queue
+     */
+    wordSearchQueueSize: number;
+
+    /**
      * The size of the tag discovery queue
      */
     tagDiscoveryQueueSize: number;

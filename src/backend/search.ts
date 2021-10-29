@@ -13,7 +13,7 @@ import {
     getArticleIdsByAuthors,
     getArticleIdsByDomains
 } from "../utils/database";
-import {workerTagSearchQueue} from "./redis";
+import {workerTagSearchQueue, workerWordSearchQueue} from "./redis";
 
 function getOrDefault<K, V>(id: K, map: Map<K, V>, def: V): V {
     const result = map.get(id) ?? def;
@@ -112,6 +112,12 @@ async function matchArticlesBySearch(search: SearchRequest) {
         Array.from(
             new Set(matchedArticles.flatMap(article => article.tags))
         ).map(tag => workerTagSearchQueue.queue(tag))
+    );
+
+    await Promise.all(
+        Array.from(
+            new Set(matchedArticles.flatMap(article => getMatchableWords(article.title)))
+        ).map(word => workerWordSearchQueue.queue(word))
     );
 
     return {

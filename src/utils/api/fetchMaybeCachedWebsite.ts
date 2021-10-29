@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import {getCachedWebsiteContent, setCachedWebsiteContent} from "../../backend/redis";
 import createLogger from "../createLogger";
 

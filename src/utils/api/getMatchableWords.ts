@@ -6,5 +6,5 @@ export default function getMatchableWords(term: string): string[] {
         .replace(invalidCharacterRegex, " ")
         .split(splitRegex)
         .map(word => word.trim().toLowerCase())
-        .filter(Boolean);
+        .filter(w => w?.length > 1);
 }
