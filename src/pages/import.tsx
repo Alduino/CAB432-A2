@@ -59,9 +59,6 @@ export default function Import({url}: ImportProps): ReactElement {
                                 <Link>Go back home.</Link>
                             </NextLink>
                         </Text>
-                        {isApiError(result) && (
-                            <Code fontSize="xs">ERR_{result.error}</Code>
-                        )}
                     </>
                 ) : result ? (
                     <Text>Done! We&rsquo;ll redirect you in a moment.</Text>
@@ -77,6 +74,9 @@ export default function Import({url}: ImportProps): ReactElement {
                     </>
                 )}
                 <Box flexGrow={1} />
+                {isApiError(result) && (
+                    <Code fontSize="xs">ERR_{result.error}</Code>
+                )}
             </VStack>
         </Container>
     );
