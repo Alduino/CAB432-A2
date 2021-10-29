@@ -15,6 +15,7 @@ const articles: Article[] = [
         tags: ["apple", "macbook", "macbook-pro"],
         author: "Michael Myers",
         published: new Date().toString(),
+        areExtraTagsLoading: false,
         paragraphs: [
             "Lorem ipsum dolor sit amet. Actually, no. That will make this file look very ugly.",
             "But I need to test multiple paragraphs so here's another one."
@@ -27,6 +28,7 @@ const articles: Article[] = [
         tags: ["hemsworth", "cowra", "invitation"],
         author: "Liam Hemsworth",
         published: new Date().toString(),
+        areExtraTagsLoading: false,
         paragraphs: [
             "Lorem ipsum dolor sit amet. Actually, no. That will make this file look very ugly.",
             "But I need to test multiple paragraphs so here's another one."
@@ -39,6 +41,7 @@ const articles: Article[] = [
         tags: ["apple", "iphone", "iphone13", "iphone14"],
         author: "Tim Apple",
         published: new Date().toString(),
+        areExtraTagsLoading: false,
         paragraphs: [
             "Lorem ipsum dolor sit amet. Actually, no. That will make this file look very ugly.",
             "But I need to test multiple paragraphs so here's another one."
