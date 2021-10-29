@@ -1,6 +1,5 @@
 import {ok as assert} from "assert";
 import {CheerioAPI, load} from "cheerio";
-import fetch from "node-fetch";
 import Article from "../../api-types/Article";
 import fetchMaybeCachedWebsite from "../../utils/api/fetchMaybeCachedWebsite";
 import createLogger from "../../utils/createLogger";
@@ -107,6 +106,10 @@ const scraperLoaders: ScraperReducer[] = [
                 };
             },
             ($, prev) => {
+                if (Array.isArray(ldData.keywords)) {
+                    ldData.keywords = ldData.keywords.join(",");
+                }
+
                 if (typeof ldData.keywords !== "string") return prev;
                 const tags = ldData.keywords.split(",").map(normaliseTag);
                 return {
