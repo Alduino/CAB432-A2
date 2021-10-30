@@ -116,7 +116,7 @@ async function doTagGeneration(articles: string[]): Promise<string[]> {
         })
     );
 
-    return;
+    return [];
 }
 
 async function beginWorkerTagGeneration(abort?: AbortSignal) {
@@ -124,6 +124,7 @@ async function beginWorkerTagGeneration(abort?: AbortSignal) {
 
     while (!(abort?.aborted ?? false)) {
         const articles = await dequeueArticlesForTagDiscovery(connection, 3);
+        if (articles.length === 0) continue;
         const unsuccessful = await doTagGeneration(articles);
         await Promise.all(unsuccessful.map(id => tagDiscoveryQueue.queue(id)));
     }

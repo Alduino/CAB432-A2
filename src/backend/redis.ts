@@ -281,7 +281,9 @@ export async function dequeueArticlesForTagDiscovery(
     );
 
     if (items.length < count) {
-        throw new Error("Received too few items from tag discovery list");
+        // too few items, add them back into the queue
+        await Promise.all(items.map(item => tagDiscoveryQueue.queue(item)));
+        return [];
     } else if (items.length > count) {
         // add the extra ones back into the queue
         const extra = items.splice(count);

@@ -168,6 +168,12 @@ const scraperLoaders: ScraperReducer[] = [
         if (!author) return prev;
         return {...prev, author, _authorSource: "dcterms_creator"};
     },
+    function metaAuthor($, prev) {
+        if (prev.author) return prev;
+        const author = $("meta[name=author]")?.attr("content")?.trim();
+        if (!author) return prev;
+        return {...prev, author, _authorSource: "meta_author"};
+    },
     function twitterCreator($, prev) {
         if (prev.author) return prev;
         const author = $("meta[name=twitter\\:creator]")
