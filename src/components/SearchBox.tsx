@@ -243,7 +243,7 @@ export function SearchBox({
             }}
             {...props}
         >
-            <HStack flexGrow={1} spacing={0} overflowX="auto">
+            <HStack flexGrow={1} spacing={0}>
                 <HStack mr={2}>
                     {Array.from(tags).map(tag => (
                         <Tag key={tag.kind + ":" + tag.value}>
