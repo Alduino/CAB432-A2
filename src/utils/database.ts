@@ -4,7 +4,12 @@ import {ArtillerTable} from "../api-types/Schema";
 import db from "../backend/db";
 import DatabaseArticle from "../backend/db-types/DatabaseArticle";
 import DatabaseArticleTag from "../backend/db-types/DatabaseArticleTag";
-import {addCachedArticleIdsToTag, tagDiscoveryQueue} from "../backend/redis";
+import {
+    addCachedArticleIdsToTag,
+    isArticleInTagDiscoveryQueue,
+    setCachedArticleById,
+    tagDiscoveryQueue
+} from "../backend/redis";
 
 const articles = () => db<DatabaseArticle>(ArtillerTable.articles);
 const articleTags = () => db<DatabaseArticleTag>(ArtillerTable.articleTags);
@@ -17,7 +22,9 @@ export async function getArticleById(id: string): Promise<Article | null> {
         .where({article_id: id})
         .then(res => res.map(tag => tag.name));
 
-    const areExtraTagsLoading = await tagDiscoveryQueue.has(id);
+    const areExtraTagsLoading =
+        (await tagDiscoveryQueue.has(id)) ||
+        (await isArticleInTagDiscoveryQueue(id));
 
     return {
         id: dbArticle.id,
@@ -149,6 +156,25 @@ export async function createArticle(
     }
 
     return dbArticle.id;
+}
+
+export async function addTagsToArticle(article: Article, tags: string[]) {
+    await articleTags().insert(
+        tags.map(name => ({
+            id: randomUUID(),
+            article_id: article.id,
+            name
+        }))
+    );
+
+    await Promise.all(
+        tags.map(tag => addCachedArticleIdsToTag(tag, [article.id]))
+    );
+
+    await setCachedArticleById({
+        ...article,
+        tags: Array.from(new Set([...article.tags, ...tags]))
+    });
 }
 
 export function getArticleCount(): Promise<number> {

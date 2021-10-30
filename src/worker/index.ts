@@ -1,3 +1,4 @@
+import {beginTagGeneration} from "./tag-generator";
 import {beginTagSearch} from "./tag-search";
 import {beginWordSearch} from "./word-search";
 
@@ -7,5 +8,9 @@ const tagSearchWorkerCount = tagSearchWorkerCountSource ? parseInt(tagSearchWork
 const wordSearchWorkerCountSource = process.env.WORD_SEARCH_WORKER_COUNT;
 const wordSearchWorkerCount = wordSearchWorkerCountSource ? parseInt(wordSearchWorkerCountSource) : 4;
 
+const tagGenerationWorkerCountSource = process.env.TAG_GENERATION_WORKER_COUNT;
+const tagGenerationWorkerCount = wordSearchWorkerCountSource ? parseInt(tagGenerationWorkerCountSource) : 4;
+
 beginTagSearch(tagSearchWorkerCount);
 beginWordSearch(wordSearchWorkerCount);
+beginTagGeneration(tagGenerationWorkerCount);

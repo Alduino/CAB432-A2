@@ -27,7 +27,7 @@ export async function getCachedArticleById(
 
 export async function setCachedArticleById(article: Article): Promise<void> {
     const key = getArticleByIdKey(article.id);
-    await defaultRedis.set(key, JSON.stringify(article), "EX", 3600, "NX");
+    await defaultRedis.set(key, JSON.stringify(article), "EX", 3600);
 }
 
 export function getSearchWordKey(word: string) {
@@ -98,7 +98,7 @@ export async function addCachedArticleIdsToTag(
 ): Promise<void> {
     if (ids.length === 0) return;
     const key = getTagKey(tag);
-    await defaultRedis.sadd(key, ...ids);
+    await defaultRedis.sadd(key, ids);
     await defaultRedis.expire(key, 3600);
 }
 
@@ -238,6 +238,20 @@ export const tagDiscoveryQueue = new RedisUniqueQueue(
     "worker:queue:tag-discovery"
 );
 
+const tagDiscoveryQueueInProgressKey = `worker:queue:tag-discovery:in-progress`;
+
+export async function addToInProgressTagDiscovery(articleIds: string[]) {
+    if (articleIds.length === 0) return;
+    await defaultRedis.sadd(tagDiscoveryQueueInProgressKey, articleIds);
+}
+
+export async function removeFromInProgressTagDiscovery(articleIds: string[]) {
+    if (articleIds.length === 0) return;
+    await defaultRedis.srem(tagDiscoveryQueueInProgressKey, articleIds);
+}
+
+const tagDiscoveryQueueWaitingKey = "worker:queue:tag-discovery:waiting";
+
 /**
  * Waits until there `count` are items in the tag discovery queue, and returns
  * them for processing (removing them from the queue)
@@ -246,13 +260,51 @@ export async function dequeueArticlesForTagDiscovery(
     connection: Redis,
     count: number
 ): Promise<string[]> {
-    const items = new Array(count);
+    // reads all the items from a set, and empties the set
+    // language=lua
+    const SPULL = `
+        local items
+        items = redis.call("smembers", KEYS[1])
+        redis.call("del", KEYS[1])
+        return items
+    `;
 
-    for (let i = 0; i < count; i++) {
-        items[i] = await tagDiscoveryQueue.dequeue(connection);
+    while ((await defaultRedis.scard(tagDiscoveryQueueWaitingKey)) < count) {
+        const nextItem = await tagDiscoveryQueue.dequeue(connection);
+        await defaultRedis.sadd(tagDiscoveryQueueWaitingKey, nextItem);
+    }
+
+    const items: string[] = await defaultRedis.eval(
+        SPULL,
+        1,
+        tagDiscoveryQueueWaitingKey
+    );
+
+    if (items.length < count) {
+        throw new Error("Received too few items from tag discovery list");
+    } else if (items.length > count) {
+        // add the extra ones back into the queue
+        const extra = items.splice(count);
+        await Promise.all(extra.map(item => tagDiscoveryQueue.queue(item)));
     }
 
     return items;
+}
+
+export async function isArticleInTagDiscoveryQueue(articleId: string) {
+    if (await defaultRedis.sismember(tagDiscoveryQueueInProgressKey, articleId))
+        return true;
+    if (await defaultRedis.sismember(tagDiscoveryQueueWaitingKey, articleId))
+        return true;
+    return await tagDiscoveryQueue.has(articleId);
+}
+
+export async function getArticleCountQueuedForTagDiscovery() {
+    return (
+        (await defaultRedis.scard(tagDiscoveryQueueInProgressKey)) +
+        (await defaultRedis.scard(tagDiscoveryQueueWaitingKey)) +
+        (await tagDiscoveryQueue.getSize())
+    );
 }
 
 function getArticleCountStatKey() {
