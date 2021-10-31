@@ -42,6 +42,7 @@ export default async function getArticleIdsBySearchWord(word: string) {
         cachedArticleIds.length + databaseArticleIds.size > 10 ||
         !(await shouldQueryMoreArticlesBySearchWord(word))
     ) {
+        await addCachedArticleIdsToSearchWord(word, Array.from(databaseArticleIds));
         return new Set([...cachedArticleIds, ...databaseArticleIds]);
     }
 
